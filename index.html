@@ -1,0 +1,3511 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Nội Trú - Trường PTDTNT THCS&THPT Si Ma Cai (2026-2027)</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Tùy chỉnh thanh cuộn */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    /* Chế độ in ấn khổ ngang A4 Landscape cho Bảng Chấm Cơm */
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 8mm 6mm;
+      }
+      body {
+        background: white !important;
+        color: black !important;
+        font-size: 9pt !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+      }
+      th, td {
+        border: 1px solid #333 !important;
+        padding: 2px 3px !important;
+        font-size: 8pt !important;
+      }
+      .page-break-after {
+        page-break-after: always;
+      }
+    }
+    .print-only {
+      display: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50">
+
+  <header class="bg-gradient-to-r from-emerald-800 via-teal-800 to-slate-900 text-white shadow-md sticky top-0 z-40 no-print">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner flex-shrink-0">
+            <i class="fa-solid fa-hotel text-emerald-300 text-xl"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] uppercase tracking-wider text-emerald-200 font-semibold">Sở GD&ĐT Lào Cai • Xã Si Ma Cai</span>
+              <span class="bg-emerald-500/30 text-emerald-200 text-[10px] px-2 py-0.5 rounded-full border border-emerald-400/30 font-bold">2026 - 2027</span>
+            </div>
+            <h1 class="text-base sm:text-lg font-black tracking-tight flex flex-wrap items-center gap-2">
+              <span>HỆ THỐNG QUẢN LÝ NỘI TRÚ TRƯỜNG PTDTNT THCS&THPT SI MA CAI</span>
+            </h1>
+          </div>
+        </div>
+
+        <!-- Thông tin Tổ trưởng và Tác vụ nhanh -->
+        <div class="flex items-center gap-2 text-xs flex-wrap justify-between md:justify-end">
+          <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
+            <i class="fa-solid fa-user-shield text-amber-300"></i>
+            <div>
+              <span class="text-slate-300 text-[10px] block leading-tight">Tổ trưởng Quản lý Nội trú:</span>
+              <span class="font-bold text-white text-xs">Thầy Bùi Huy Hậu</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="exportFullBackupData()" class="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition font-medium flex items-center gap-1" title="Sao lưu dữ liệu">
+              <i class="fa-solid fa-cloud-arrow-down text-emerald-300"></i>
+              <span class="hidden sm:inline">Sao Lưu</span>
+            </button>
+            <button onclick="triggerRestoreBackup()" class="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition font-medium flex items-center gap-1" title="Khôi phục dữ liệu">
+              <i class="fa-solid fa-cloud-arrow-up text-amber-300"></i>
+              <span class="hidden sm:inline">Phục Hồi</span>
+            </button>
+            <input type="file" id="backup-file-input" class="hidden" accept=".json" onchange="handleRestoreBackupFile(event)">
+          </div>
+        </div>
+      </div>
+
+      <nav class="flex items-center gap-1 overflow-x-auto pt-2.5 pb-0.5 mt-1 border-t border-white/10 text-xs font-semibold no-scrollbar">
+        <button onclick="switchTab('tab-attendance')" id="nav-tab-attendance" class="nav-btn px-3 py-1.5 rounded-lg text-white bg-emerald-700/80 shadow-inner flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-utensils"></i>
+          <span>Điểm Danh Bữa Ăn (S-T-C)</span>
+        </button>
+        <button onclick="switchTab('tab-daily-summary')" id="nav-tab-daily-summary" class="nav-btn px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Báo Cáo Tổng Hợp Ngày (Quản Lý)</span>
+        </button>
+        <button onclick="switchTab('tab-settlement')" id="nav-tab-settlement" class="nav-btn px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-file-invoice"></i>
+          <span>Bảng Chấm Cơm Tháng</span>
+        </button>
+        <button onclick="switchTab('tab-dorm')" id="nav-tab-dorm" class="nav-btn px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-bed"></i>
+          <span>Sơ Đồ KTX (57 Phòng)</span>
+        </button>
+        <button onclick="switchTab('tab-classes')" id="nav-tab-classes" class="nav-btn px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-chalkboard-user"></i>
+          <span>15 Lớp & GVCN</span>
+        </button>
+        <button onclick="switchTab('tab-students')" id="nav-tab-students" class="nav-btn px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-users"></i>
+          <span>Danh Sách Toàn Trường</span>
+        </button>
+        <button onclick="switchTab('tab-menu')" id="nav-tab-menu" class="nav-btn px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-camera"></i>
+          <span>Thực Đơn & Ảnh Món Ăn</span>
+        </button>
+        <button onclick="switchTab('tab-discipline')" id="nav-tab-discipline" class="nav-btn px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-scale-balanced"></i>
+          <span>Sổ Nề Nếp Kỷ Luật</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 py-4 flex-1 w-full space-y-4">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: ĐIỂM DANH CÁC BỮA ĂN (SÁNG - TRƯA - CHIỀU) -->
+    <!-- ========================================== -->
+    <section id="tab-attendance" class="tab-content space-y-4">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-utensils text-emerald-600"></i>
+              <span>Điểm Danh Các Bữa Ăn: Sáng • Trưa • Chiều</span>
+            </h2>
+            <div class="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
+              <span class="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200"><i class="fa-solid fa-check text-emerald-600 mr-1"></i>Mặc định ăn đủ (+)</span>
+              <span class="font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200"><i class="fa-solid fa-user-xmark text-rose-600 mr-1"></i>Vắng mới báo (Tự động điền "P")</span>
+              <span class="text-slate-400">• Liên thông dữ liệu 100% với KTX, Báo Cáo Ngày và Bảng Chấm Cơm Tháng</span>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-1.5 text-xs bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+              <label for="attendance-date" class="font-semibold text-slate-600">Ngày:</label>
+              <input type="date" id="attendance-date" onchange="handleAttendanceDateChange()" class="bg-transparent font-medium text-slate-800 outline-none">
+            </div>
+            <button onclick="openQuickAbsenceModal()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+              <i class="fa-solid fa-user-xmark"></i>
+              <span>+ Báo Vắng Nhanh (S/T/C)</span>
+            </button>
+            <button onclick="openRoomSelectorForAttendance()" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+              <i class="fa-solid fa-bed"></i>
+              <span>Điểm Danh Theo Phòng KTX</span>
+            </button>
+            <select id="attendance-class-filter" onchange="renderAttendanceTable()" class="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium">
+              <option value="ALL">-- Tất cả 15 lớp --</option>
+              <option value="6A">Lớp 6A</option><option value="6B">Lớp 6B</option>
+              <option value="7A">Lớp 7A</option><option value="7B">Lớp 7B</option>
+              <option value="8A">Lớp 8A</option><option value="8B">Lớp 8B</option>
+              <option value="9A">Lớp 9A</option><option value="9B">Lớp 9B</option>
+              <option value="10A">Lớp 10A</option><option value="10B">Lớp 10B</option><option value="10C">Lớp 10C</option>
+              <option value="11A">Lớp 11A</option><option value="11B">Lớp 11B</option>
+              <option value="12A">Lớp 12A</option><option value="12B">Lớp 12B</option>
+            </select>
+            <button onclick="resetAllToPresentToday()" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-xs rounded-xl border border-emerald-300 transition" title="Đặt lại tất cả học sinh ăn đủ 3 bữa (+) hôm nay">
+              <i class="fa-solid fa-rotate-left mr-1"></i>Ăn đủ tất cả (+)
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 mt-3">
+          <!-- BỮA SÁNG -->
+          <div class="p-3.5 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 shadow-sm relative overflow-hidden">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    <i class="fa-solid fa-sun"></i>
+                  </span>
+                  <div>
+                    <h3 class="text-sm font-bold text-amber-900">ĐIỂM DANH BỮA SÁNG</h3>
+                    <p class="text-[11px] text-amber-700 font-medium">Bữa phụ sáng hàng ngày</p>
+                  </div>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                  <span class="text-2xl font-black text-amber-800 font-mono" id="meal-sum-breakfast">0</span>
+                  <span class="text-xs font-bold text-amber-700">suất ăn (+)</span>
+                  <span class="text-xs text-rose-600 font-bold bg-white px-2 py-0.5 rounded-full border border-rose-200 ml-1" id="meal-absent-breakfast">0 vắng (P)</span>
+                </div>
+              </div>
+              <button onclick="filterByMealView('b')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition flex items-center gap-1">
+                <i class="fa-solid fa-filter"></i> Xem Sáng
+              </button>
+            </div>
+            <div class="mt-3 pt-2 border-t border-amber-200/70 flex items-center justify-between text-xs">
+              <span class="text-slate-600 text-[11px]">Đúng giờ quy định sáng</span>
+              <button onclick="quickBatchAbsenceMeal('b')" class="text-amber-800 hover:text-amber-950 font-bold text-[11px] underline">
+                + Báo vắng Bữa Sáng
+              </button>
+            </div>
+          </div>
+
+          <!-- BỮA TRƯA -->
+          <div class="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 shadow-sm relative overflow-hidden">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    <i class="fa-solid fa-bowl-rice"></i>
+                  </span>
+                  <div>
+                    <h3 class="text-sm font-bold text-emerald-950">ĐIỂM DANH BỮA TRƯA</h3>
+                    <p class="text-[11px] text-emerald-700 font-medium">Bữa chính trưa tại nhà ăn</p>
+                  </div>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                  <span class="text-2xl font-black text-emerald-800 font-mono" id="meal-sum-lunch">0</span>
+                  <span class="text-xs font-bold text-emerald-700">suất ăn (+)</span>
+                  <span class="text-xs text-rose-600 font-bold bg-white px-2 py-0.5 rounded-full border border-rose-200 ml-1" id="meal-absent-lunch">0 vắng (P)</span>
+                </div>
+              </div>
+              <button onclick="filterByMealView('l')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition flex items-center gap-1">
+                <i class="fa-solid fa-filter"></i> Xem Trưa
+              </button>
+            </div>
+            <div class="mt-3 pt-2 border-t border-emerald-200/70 flex items-center justify-between text-xs">
+              <span class="text-slate-600 text-[11px]">Bữa chính trưa nội trú</span>
+              <button onclick="quickBatchAbsenceMeal('l')" class="text-emerald-800 hover:text-emerald-950 font-bold text-[11px] underline">
+                + Báo vắng Bữa Trưa
+              </button>
+            </div>
+          </div>
+
+          <!-- BỮA CHIỀU -->
+          <div class="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-sm relative overflow-hidden">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    <i class="fa-solid fa-moon"></i>
+                  </span>
+                  <div>
+                    <h3 class="text-sm font-bold text-blue-950">ĐIỂM DANH BỮA CHIỀU</h3>
+                    <p class="text-[11px] text-blue-700 font-medium">Bữa chính chiều/tối nội trú</p>
+                  </div>
+                </div>
+                <div class="mt-3 flex items-baseline gap-2">
+                  <span class="text-2xl font-black text-blue-800 font-mono" id="meal-sum-dinner">0</span>
+                  <span class="text-xs font-bold text-blue-700">suất ăn (+)</span>
+                  <span class="text-xs text-rose-600 font-bold bg-white px-2 py-0.5 rounded-full border border-rose-200 ml-1" id="meal-absent-dinner">0 vắng (P)</span>
+                </div>
+              </div>
+              <button onclick="filterByMealView('d')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition flex items-center gap-1">
+                <i class="fa-solid fa-filter"></i> Xem Chiều
+              </button>
+            </div>
+            <div class="mt-3 pt-2 border-t border-blue-200/70 flex items-center justify-between text-xs">
+              <span class="text-slate-600 text-[11px]">Bữa chính chiều nội trú</span>
+              <button onclick="quickBatchAbsenceMeal('d')" class="text-blue-800 hover:text-blue-950 font-bold text-[11px] underline">
+                + Báo vắng Bữa Chiều
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chế độ xem lọc bảng theo bữa -->
+        <div class="flex flex-wrap items-center justify-between gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs mt-3">
+          <div class="flex items-center gap-1.5">
+            <span class="font-bold text-slate-700">Chế độ xem bảng:</span>
+            <div class="inline-flex rounded-lg border border-slate-300 p-0.5 bg-white text-[11px] font-semibold">
+              <button type="button" id="btn-view-all-meals" onclick="filterByMealView('ALL')" class="px-2.5 py-1 rounded-md bg-emerald-600 text-white shadow-xs">
+                Tất cả 3 bữa
+              </button>
+              <button type="button" id="btn-view-b" onclick="filterByMealView('b')" class="px-2.5 py-1 rounded-md text-slate-700 hover:text-amber-800">
+                Chuyên Bữa Sáng
+              </button>
+              <button type="button" id="btn-view-l" onclick="filterByMealView('l')" class="px-2.5 py-1 rounded-md text-slate-700 hover:text-emerald-800">
+                Chuyên Bữa Trưa
+              </button>
+              <button type="button" id="btn-view-d" onclick="filterByMealView('d')" class="px-2.5 py-1 rounded-md text-slate-700 hover:text-blue-800">
+                Chuyên Bữa Chiều
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-slate-600">Tổng cả ngày:</span>
+            <span class="font-bold text-emerald-900 bg-emerald-100 px-3 py-1 rounded-lg border border-emerald-300 text-xs font-mono" id="meal-sum-total">0 bữa</span>
+          </div>
+        </div>
+
+        <div class="mt-4 p-4 rounded-2xl bg-gradient-to-r from-rose-50/70 to-amber-50/70 border border-rose-200">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-2 border-b border-rose-200/80">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+                <span>BẢNG TỔNG HỢP DANH SÁCH HỌC SINH BÁO VẮNG THEO BỮA & PHÒNG TRONG NGÀY</span>
+                <span id="badge-total-absent" class="px-2 py-0.5 rounded-full bg-rose-600 text-white font-mono font-bold text-[11px]">0 em</span>
+              </h3>
+              <p class="text-[11px] text-slate-600 mt-0.5">
+                Chỉ những học sinh có báo vắng (được điền <strong class="text-rose-700 font-bold">P</strong>) mới hiển thị tại bảng này để nhà bếp và Thầy Bùi Huy Hậu nắm rõ. Học sinh không báo mặc định ăn đủ (<strong class="text-emerald-700 font-bold">+</strong>).
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-slate-600">Ngày: <strong id="absence-summary-date-label" class="font-mono text-slate-900">--/--/----</strong></span>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto mt-3 rounded-xl border border-rose-200 bg-white">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-rose-100/70 font-bold text-slate-700 border-b border-rose-200 text-center uppercase tracking-wide">
+                <tr>
+                  <th class="py-2 px-2.5 w-10 text-rose-700">STT</th>
+                  <th class="py-2 px-4 text-left font-bold text-slate-900">Họ và Tên Học Sinh</th>
+                  <th class="py-2 px-3 text-blue-700">Lớp</th>
+                  <th class="py-2 px-3 text-purple-700 font-bold">Phòng KTX</th>
+                  <th class="py-2 px-3">Có Mặt KTX</th>
+                  <th class="py-2 px-3 text-amber-800 bg-amber-50/50">Vắng Sáng (P)</th>
+                  <th class="py-2 px-3 text-emerald-800 bg-emerald-50/50">Vắng Trưa (P)</th>
+                  <th class="py-2 px-3 text-blue-800 bg-blue-50/50">Vắng Chiều (P)</th>
+                  <th class="py-2 px-4 text-left">Lý do / Ghi chú</th>
+                  <th class="py-2 px-3 w-36 bg-slate-50">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="absence-overview-tbody" class="divide-y divide-slate-100">
+                <!-- Render từ JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bảng chi tiết chấm số bữa ăn toàn thể học sinh -->
+        <div class="overflow-x-auto mt-4 rounded-xl border border-slate-200">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 font-bold text-slate-700 uppercase">
+              <tr>
+                <th class="py-2.5 px-3 text-center w-12 text-rose-600">STT</th>
+                <th class="py-2.5 px-3 text-center font-bold text-blue-700">Lớp học</th>
+                <th class="py-2.5 px-4 font-bold text-slate-800">Họ và Tên</th>
+                <th class="py-2.5 px-2 text-center font-semibold text-purple-700">Phòng</th>
+                <th class="py-2.5 px-3 text-center">Có Mặt KTX</th>
+                <th class="py-2.5 px-3 text-center">Chấm Bữa Ăn (Sáng - Trưa - Chiều)</th>
+                <th class="py-2.5 px-3 text-center font-bold text-emerald-700">Tổng Số Bữa Ăn</th>
+                <th class="py-2.5 px-3">Ghi chú</th>
+                <th class="py-2.5 px-3 text-center w-24 bg-blue-50 text-blue-900">Sửa HS</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-table-body" class="divide-y divide-slate-100">
+              <!-- Render tự động JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: BÁO CÁO TỔNG HỢP NGÀY (QUẢN LÝ) -->
+    <!-- ========================================== -->
+    <section id="tab-daily-summary" class="tab-content hidden space-y-4">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-blue-600"></i>
+              <span>Báo Cáo Tổng Hợp Ngày Toàn Diện (Tổ Trưởng Quản Lý)</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Bao quát toàn bộ số liệu: Điểm danh KTX, Số suất ăn 3 bữa, Tình hình 15 lớp và Nề nếp kỷ luật</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-1.5 text-xs bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+              <button onclick="changeDailySummaryDay(-1)" class="text-slate-500 hover:text-slate-800 p-1"><i class="fa-solid fa-chevron-left"></i></button>
+              <input type="date" id="daily-summary-date" onchange="renderDailySummary()" class="bg-transparent font-bold text-slate-800 outline-none">
+              <button onclick="changeDailySummaryDay(1)" class="text-slate-500 hover:text-slate-800 p-1"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            <button onclick="setDailySummaryToday()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">Hôm nay</button>
+            <button onclick="window.print()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+              <i class="fa-solid fa-print"></i> In Báo Cáo
+            </button>
+          </div>
+        </div>
+
+        <!-- 5 Thẻ KPI chỉ số trọng yếu -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+            <span class="text-xs text-slate-500 font-medium">Tổng Sĩ Số Toàn Trường</span>
+            <div class="mt-1 flex items-baseline gap-2">
+              <span class="text-2xl font-black text-slate-800 font-mono" id="sum-kpi-total-students">0</span>
+              <span class="text-xs text-slate-500 font-semibold">học sinh</span>
+            </div>
+            <span class="text-[11px] text-indigo-700 font-bold mt-1 block" id="sum-kpi-gender-breakdown">Nam: 0 • Nữ: 0</span>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200">
+            <span class="text-xs text-emerald-700 font-medium">Có Mặt Tại KTX Hôm Nay</span>
+            <div class="mt-1 flex items-baseline gap-2">
+              <span class="text-2xl font-black text-emerald-800 font-mono" id="sum-kpi-present-dorm">0</span>
+              <span class="text-xs text-emerald-700 font-semibold">em</span>
+            </div>
+            <span class="text-[11px] text-emerald-700 font-semibold mt-1 block" id="sum-kpi-present-pct">100%</span>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-rose-50 border border-rose-200">
+            <span class="text-xs text-rose-700 font-medium">Vắng KTX / Về Nhà</span>
+            <div class="mt-1 flex items-baseline gap-2">
+              <span class="text-2xl font-black text-rose-700 font-mono" id="sum-kpi-absent-dorm">0</span>
+              <span class="text-xs text-rose-700 font-semibold">em vắng</span>
+            </div>
+            <span class="text-[11px] text-rose-600 font-semibold mt-1 block">Có phép & nghỉ ốm</span>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200">
+            <span class="text-xs text-amber-700 font-medium">Tổng Suất Ăn Cả Ngày</span>
+            <div class="mt-1 flex items-baseline gap-2">
+              <span class="text-2xl font-black text-amber-800 font-mono" id="sum-kpi-total-meals">0</span>
+              <span class="text-xs text-amber-700 font-semibold">suất ăn</span>
+            </div>
+            <span class="text-[11px] text-amber-800 font-semibold mt-1 block" id="sum-kpi-meal-breakdown">S: 0 | T: 0 | C: 0</span>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 col-span-2 sm:col-span-1">
+            <span class="text-xs text-purple-700 font-medium">Tình Trạng 57 Phòng KTX</span>
+            <div class="mt-1 flex items-baseline gap-2">
+              <span class="text-2xl font-black text-purple-800 font-mono">57</span>
+              <span class="text-xs text-purple-700 font-semibold">phòng</span>
+            </div>
+            <span class="text-[11px] text-purple-700 font-semibold mt-1 block">23 Nam • 34 Nữ</span>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 mb-2">
+            <i class="fa-solid fa-list-check text-emerald-600"></i>
+            <span>BẢNG TỔNG HỢP CHI TIẾT SĨ SỐ VÀ SUẤT ĂN THEO 15 LỚP</span>
+          </h3>
+          <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-100 font-bold text-slate-700 uppercase">
+                <tr>
+                  <th class="py-2.5 px-3 text-center w-12">STT</th>
+                  <th class="py-2.5 px-3 text-center text-blue-700">Lớp</th>
+                  <th class="py-2.5 px-4">Giáo Viên Chủ Nhiệm</th>
+                  <th class="py-2.5 px-3 text-center">Sĩ số</th>
+                  <th class="py-2.5 px-3 text-center text-emerald-700">Có mặt KTX</th>
+                  <th class="py-2.5 px-3 text-center text-rose-600">Vắng KTX</th>
+                  <th class="py-2.5 px-3 text-center text-amber-700 bg-amber-50/50">Suất Sáng (+)</th>
+                  <th class="py-2.5 px-3 text-center text-emerald-700 bg-emerald-50/50">Suất Trưa (+)</th>
+                  <th class="py-2.5 px-3 text-center text-blue-700 bg-blue-50/50">Suất Chiều (+)</th>
+                  <th class="py-2.5 px-3 text-center font-bold text-slate-800">Tổng Suất Ăn</th>
+                </tr>
+              </thead>
+              <tbody id="daily-summary-classes-tbody" class="divide-y divide-slate-100">
+                <!-- Render từ JS -->
+              </tbody>
+              <tfoot id="daily-summary-classes-tfoot" class="bg-slate-50 font-bold border-t-2 border-slate-300">
+                <!-- Render tổng cộng -->
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: BẢNG CHẤM CƠM THÁNG (CHUẨN 100% MẪU) -->
+    <!-- ========================================== -->
+    <section id="tab-settlement" class="tab-content hidden space-y-4">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100 no-print">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-file-invoice text-emerald-600"></i>
+              <span>BẢNG CHẤM CƠM HÀNG THÁNG (CHUẨN 100% MẪU BIỂU)</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Quy ước chuẩn: Ăn cơm đánh dấu (<strong class="text-emerald-700 font-bold">+</strong>) • Không ăn/vắng đánh dấu (<strong class="text-rose-700 font-bold">P</strong>)</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-1.5 text-xs bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+              <label for="settlement-month" class="font-semibold text-slate-600">Tháng:</label>
+              <input type="month" id="settlement-month" value="2026-09" onchange="renderSettlementTable()" class="bg-transparent font-bold text-slate-800 outline-none">
+            </div>
+            <select id="settlement-class-filter" onchange="renderSettlementTable()" class="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-700">
+              <option value="6A">Lớp 6A (GVCN: Long Thị Thanh Huyền)</option>
+              <option value="6B">Lớp 6B (GVCN: Nguyễn Thị Thanh Nga)</option>
+              <option value="7A">Lớp 7A (GVCN: Trần Thị Bích Thủy)</option>
+              <option value="7B">Lớp 7B (GVCN: Lê Dịu Loan)</option>
+              <option value="8A">Lớp 8A (GVCN: Trần Khắc Thanh)</option>
+              <option value="8B">Lớp 8B (GVCN: Đinh Thị Thủy)</option>
+              <option value="9A">Lớp 9A (GVCN: Trần Quyết Thắng)</option>
+              <option value="9B">Lớp 9B (GVCN: Lê Trung Nghĩa)</option>
+              <option value="10A">Lớp 10A (GVCN: Nguyễn Ngọc Linh)</option>
+              <option value="10B">Lớp 10B (GVCN: Hoàng Thị Lợi)</option>
+              <option value="10C">Lớp 10C (GVCN: Vừ Thị Dung)</option>
+              <option value="11A">Lớp 11A (GVCN: Nguyễn Thị Tình)</option>
+              <option value="11B">Lớp 11B (GVCN: Lùng Ngấn Thăng)</option>
+              <option value="12A">Lớp 12A (GVCN: Dương Thị Huyền)</option>
+              <option value="12B">Lớp 12B (GVCN: Lý Thị Dần)</option>
+            </select>
+            <button onclick="exportSettlementToExcel()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-excel"></i> Xuất Excel Chuẩn
+            </button>
+            <button onclick="window.print()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+              <i class="fa-solid fa-print"></i> In Bảng Chấm Cơm
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 p-4 rounded-xl border border-slate-200 bg-white">
+          <!-- Tiêu đề văn bản chuẩn -->
+          <div class="text-center space-y-1 pb-3">
+            <div class="flex justify-between items-start text-xs font-bold text-slate-800">
+              <div class="text-left">
+                <p>SỞ GIÁO DỤC VÀ ĐÀO TẠO LÀO CAI</p>
+                <p class="uppercase font-black">TRƯỜNG PTDTNT THCS VÀ THPT SI MA CAI</p>
+              </div>
+              <div class="text-right">
+                <p>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+                <p class="font-normal italic">Độc lập - Tự do - Hạnh phúc</p>
+              </div>
+            </div>
+            <h2 class="text-base sm:text-xl font-black uppercase text-slate-900 pt-2 tracking-wide">BẢNG CHẤM CƠM</h2>
+            <p class="text-xs font-semibold text-slate-700" id="settlement-heading-info">Tháng 09 năm 2026 - Lớp 6A</p>
+          </div>
+
+          <div class="overflow-x-auto mt-2">
+            <table class="w-full text-left border-collapse text-[11px] border border-slate-800" id="table-settlement-month">
+              <thead class="bg-slate-100 text-center font-bold text-slate-900 border-b border-slate-800">
+                <tr>
+                  <th rowspan="2" class="border border-slate-800 py-1 px-1.5 w-8">STT</th>
+                  <th rowspan="2" class="border border-slate-800 py-1 px-3 min-w-[150px] text-left">Họ và tên</th>
+                  <th rowspan="2" class="border border-slate-800 py-1 px-1.5 w-14">Bữa ăn trong ngày</th>
+                  <th colspan="31" class="border border-slate-800 py-1 px-1 text-center font-bold">Ngày trong tháng</th>
+                  <th rowspan="2" class="border border-slate-800 py-1 px-1.5 w-12 font-black">Cộng</th>
+                  <th rowspan="2" class="border border-slate-800 py-1 px-2 min-w-[120px]">Ký xác nhận (Ký, ghi rõ họ tên)</th>
+                  <th rowspan="2" class="border border-slate-800 py-1 px-1.5 w-12 bg-blue-50 text-blue-900 no-print">Sửa HS</th>
+                </tr>
+                <tr class="bg-slate-50 text-[10px]" id="settlement-days-header">
+                  <!-- Render động các ngày từ 1 đến 31 -->
+                </tr>
+              </thead>
+              <tbody id="settlement-table-tbody" class="text-slate-900">
+                <!-- Render từ JS -->
+              </tbody>
+              <tfoot id="settlement-table-tfoot" class="font-bold bg-slate-100 text-center border-t-2 border-slate-800">
+                <!-- Render hàng Cộng cuối bảng -->
+              </tfoot>
+            </table>
+          </div>
+
+          <!-- Chân trang 4 chức danh ký duyệt chuẩn mực theo ảnh -->
+          <div class="mt-8 pt-4 grid grid-cols-4 gap-4 text-center text-xs">
+            <div class="space-y-1">
+              <p class="font-bold text-slate-900 uppercase">Giáo viên chủ nhiệm</p>
+              <p class="text-[11px] text-slate-500 italic">(Ký, ghi rõ họ tên)</p>
+              <div class="h-16"></div>
+              <p class="font-semibold text-slate-800" id="settlement-sign-gvcn">..............................</p>
+            </div>
+            <div class="space-y-1">
+              <p class="font-bold text-slate-900 uppercase">Quản lý nhà ăn</p>
+              <p class="text-[11px] text-slate-500 italic">(Ký, ghi rõ họ tên)</p>
+              <div class="h-16"></div>
+              <p class="font-semibold text-slate-800">..............................</p>
+            </div>
+            <div class="space-y-1">
+              <p class="font-bold text-slate-900 uppercase">Kế toán</p>
+              <p class="text-[11px] text-slate-500 italic">(Ký, ghi rõ họ tên)</p>
+              <div class="h-16"></div>
+              <p class="font-semibold text-slate-800">..............................</p>
+            </div>
+            <div class="space-y-1">
+              <p class="italic text-[11px] text-slate-600" id="settlement-sign-date">Si Ma Cai, ngày ..... tháng ..... năm .....</p>
+              <p class="font-bold text-slate-900 uppercase">Hiệu trưởng</p>
+              <p class="text-[11px] text-slate-500 italic">(Ký, đóng dấu)</p>
+              <div class="h-16"></div>
+              <p class="font-semibold text-slate-800">..............................</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: SƠ ĐỒ KTX (57 PHÒNG) -->
+    <!-- ========================================== -->
+    <section id="tab-dorm" class="tab-content hidden space-y-4">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-bed text-purple-600"></i>
+              <span>Sơ Đồ Ký Túc Xá: 57 Phòng (23 Phòng Nam • 34 Phòng Nữ)</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Phân bổ 3 tầng chuẩn theo quy định trường PTDTNT THCS&THPT Si Ma Cai</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="dorm-filter-block" onchange="renderDormRooms()" class="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold">
+              <option value="ALL">-- Tất cả 57 phòng --</option>
+              <option value="Nam">Khu KTX Nam (23 phòng)</option>
+              <option value="Nữ">Khu KTX Nữ (34 phòng)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="dorm-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 mt-4">
+          <!-- Render tự động từ JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: 15 LỚP & GIÁO VIÊN CHỦ NHIỆM -->
+    <!-- ========================================== -->
+    <section id="tab-classes" class="tab-content hidden space-y-4">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-chalkboard-user text-blue-600"></i>
+              <span>Danh Sách 15 Lớp Học & Giáo Viên Chủ Nhiệm (2026 - 2027)</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Khối THCS (6, 7, 8, 9) và Khối THPT (10, 11, 12)</p>
+          </div>
+        </div>
+
+        <div id="classes-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mt-4">
+          <!-- Render từ JS -->
+        </div>
+
+        <div id="class-detail-container" class="mt-6 hidden">
+          <!-- Render bảng chi tiết lớp đã chọn -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 6: DANH SÁCH HỌC SINH TOÀN TRƯỜNG -->
+    <!-- ========================================== -->
+    <section id="tab-students" class="tab-content hidden space-y-4">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-users text-emerald-600"></i>
+              <span>Danh Sách Toàn Thể Học Sinh Nội Trú Năm Học 2026-2027</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Đã bỏ cột quê quán theo yêu cầu. Dữ liệu liên thông 100%.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="student-search-input" onkeyup="renderStudentsTable()" placeholder="Tìm tên học sinh..." class="px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none w-44">
+            <select id="student-class-filter" onchange="renderStudentsTable()" class="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium">
+              <option value="ALL">-- Tất cả lớp --</option>
+              <option value="6A">Lớp 6A</option><option value="6B">Lớp 6B</option>
+              <option value="7A">Lớp 7A</option><option value="7B">Lớp 7B</option>
+              <option value="8A">Lớp 8A</option><option value="8B">Lớp 8B</option>
+              <option value="9A">Lớp 9A</option><option value="9B">Lớp 9B</option>
+              <option value="10A">Lớp 10A</option><option value="10B">Lớp 10B</option><option value="10C">Lớp 10C</option>
+              <option value="11A">Lớp 11A</option><option value="11B">Lớp 11B</option>
+              <option value="12A">Lớp 12A</option><option value="12B">Lớp 12B</option>
+            </select>
+            <button onclick="openExcelImportModal()" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5" title="Nhập tệp danh sách toàn trường .xls / .xlsx">
+              <i class="fa-solid fa-file-excel text-emerald-200"></i>
+              <span>Nhập Toàn Trường (Excel)</span>
+            </button>
+            <button onclick="downloadSampleExcel()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl border border-slate-200 transition flex items-center gap-1" title="Tải file mẫu Excel chuẩn">
+              <i class="fa-solid fa-download"></i> Tải Mẫu
+            </button>
+            <button onclick="openAddStudentModal()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+              <i class="fa-solid fa-user-plus"></i> + Thêm Học Sinh
+            </button>
+          </div>
+        </div>
+
+        <!-- Khối thống kê: Tổng số lượng, Học sinh Nam, Học sinh Nữ -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-3.5">
+          <!-- Tổng sĩ số toàn trường -->
+          <div class="p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/40 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                  <i class="fa-solid fa-users"></i>
+                </span>
+                <div>
+                  <h3 class="text-xs font-bold text-slate-800 uppercase tracking-tight">Tổng Sĩ Số Toàn Trường</h3>
+                  <p class="text-[10px] text-slate-500 font-medium">Toàn bộ học sinh nội trú</p>
+                </div>
+              </div>
+              <div class="mt-2.5 flex items-baseline gap-2">
+                <span class="text-2xl font-black text-blue-900 font-mono" id="stat-total-students">0</span>
+                <span class="text-xs font-bold text-blue-700">học sinh</span>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold border border-blue-200">
+              15 Lớp (Khối 6-12)
+            </span>
+          </div>
+
+          <!-- Học sinh Nam -->
+          <div class="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50 to-cyan-50/40 border border-indigo-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                  <i class="fa-solid fa-mars"></i>
+                </span>
+                <div>
+                  <h3 class="text-xs font-bold text-indigo-950 uppercase tracking-tight">Học Sinh Nam</h3>
+                  <p class="text-[10px] text-indigo-700 font-medium">Lưu trú khu KTX Nam</p>
+                </div>
+              </div>
+              <div class="mt-2.5 flex items-baseline gap-2">
+                <span class="text-2xl font-black text-indigo-900 font-mono" id="stat-male-students">0</span>
+                <span class="text-xs font-bold text-indigo-700">học sinh</span>
+                <span class="text-xs font-bold text-indigo-800 bg-white px-2 py-0.5 rounded-full border border-indigo-200 ml-1 font-mono" id="stat-male-pct">0%</span>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-bold border border-indigo-200">
+              23 Phòng KTX
+            </span>
+          </div>
+
+          <!-- Học sinh Nữ -->
+          <div class="p-3.5 rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50/40 border border-rose-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                  <i class="fa-solid fa-venus"></i>
+                </span>
+                <div>
+                  <h3 class="text-xs font-bold text-rose-950 uppercase tracking-tight">Học Sinh Nữ</h3>
+                  <p class="text-[10px] text-rose-700 font-medium">Lưu trú khu KTX Nữ</p>
+                </div>
+              </div>
+              <div class="mt-2.5 flex items-baseline gap-2">
+                <span class="text-2xl font-black text-rose-900 font-mono" id="stat-female-students">0</span>
+                <span class="text-xs font-bold text-rose-700">học sinh</span>
+                <span class="text-xs font-bold text-rose-800 bg-white px-2 py-0.5 rounded-full border border-rose-200 ml-1 font-mono" id="stat-female-pct">0%</span>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-200">
+              34 Phòng KTX
+            </span>
+          </div>
+        </div>
+
+        <!-- Bảng danh sách học sinh toàn trường đúng chuẩn -->
+        <div class="overflow-x-auto mt-4 rounded-xl border border-slate-200">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 font-bold text-slate-700 border-b border-slate-200 uppercase">
+              <tr>
+                <th class="py-2.5 px-3 text-center w-12 text-rose-600">STT</th>
+                <th class="py-2.5 px-3 text-center font-bold text-blue-700">Lớp học</th>
+                <th class="py-2.5 px-4 font-bold text-slate-800">Họ và Tên</th>
+                <th class="py-2.5 px-3 text-center">Ngày sinh</th>
+                <th class="py-2.5 px-2 text-center">Giới tính</th>
+                <th class="py-2.5 px-3 text-center">Dân tộc</th>
+                <th class="py-2.5 px-3 text-center font-bold text-purple-700 font-mono">Phòng KTX</th>
+                <th class="py-2.5 px-3 text-center">Trạng thái</th>
+                <th class="py-2.5 px-3 text-center w-24 bg-blue-50 text-blue-900">Sửa HS</th>
+              </tr>
+            </thead>
+            <tbody id="students-table-body" class="divide-y divide-slate-100">
+              <!-- Render JS từ state.students -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 7: THỰC ĐƠN & ẢNH MÓN ĂN -->
+    <!-- ========================================== -->
+    <section id="tab-menu" class="tab-content hidden space-y-4">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-camera text-emerald-600"></i>
+              <span>Thực Đơn Hàng Ngày & Ảnh Chụp Khay Ăn / Mâm Cơm Thực Tế</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Công khai món ăn 3 bữa (Sáng, Trưa, Chiều) để BGH, quản lý và phụ huynh cùng giám sát chất lượng</p>
+          </div>
+          <div class="flex items-center gap-2 text-xs bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+            <label for="menu-date-input" class="font-semibold text-slate-600">Ngày:</label>
+            <input type="date" id="menu-date-input" onchange="renderMenuTab()" class="bg-transparent font-bold text-slate-800 outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <!-- BỮA SÁNG -->
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/50 border border-amber-200 flex flex-col justify-between space-y-3">
+            <div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    <i class="fa-solid fa-sun"></i>
+                  </span>
+                  <div>
+                    <h3 class="font-bold text-amber-950 text-sm">BỮA SÁNG</h3>
+                    <span class="text-[11px] text-amber-700 font-medium">Bữa phụ sáng nội trú</span>
+                  </div>
+                </div>
+                <label class="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold cursor-pointer transition shadow-xs flex items-center gap-1">
+                  <i class="fa-solid fa-upload"></i> Đổi ảnh
+                  <input type="file" accept="image/*" class="hidden" onchange="handleMenuImageUpload(event, 'b')">
+                </label>
+              </div>
+
+              <!-- Khung hiển thị ảnh -->
+              <div class="mt-3 aspect-video bg-amber-100/60 rounded-xl overflow-hidden border border-amber-200 flex items-center justify-center relative">
+                <img id="img-menu-b" src="https://placehold.co/600x400/fef3c7/b45309?text=Chưa+có+ảnh+bữa+sáng" alt="Ảnh bữa sáng" class="w-full h-full object-cover">
+              </div>
+
+              <div class="mt-3">
+                <label class="block text-xs font-bold text-amber-900 mb-1">Món ăn bữa sáng:</label>
+                <textarea id="menu-desc-b" onchange="saveMenuDescription('b', this.value)" rows="3" placeholder="Ví dụ: Bánh bao thịt, phở bò, cháo thịt băm, xôi gà..." class="w-full p-2.5 bg-white border border-amber-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-400"></textarea>
+              </div>
+            </div>
+            <p class="text-[10px] text-amber-700 italic">* Tự động lưu sau khi nhập món ăn hoặc đổi ảnh.</p>
+          </div>
+
+          <!-- BỮA TRƯA -->
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50/50 border border-emerald-200 flex flex-col justify-between space-y-3">
+            <div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    <i class="fa-solid fa-bowl-rice"></i>
+                  </span>
+                  <div>
+                    <h3 class="font-bold text-emerald-950 text-sm">BỮA TRƯA</h3>
+                    <span class="text-[11px] text-emerald-700 font-medium">Bữa chính trưa nội trú</span>
+                  </div>
+                </div>
+                <label class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold cursor-pointer transition shadow-xs flex items-center gap-1">
+                  <i class="fa-solid fa-upload"></i> Đổi ảnh
+                  <input type="file" accept="image/*" class="hidden" onchange="handleMenuImageUpload(event, 'l')">
+                </label>
+              </div>
+
+              <!-- Khung hiển thị ảnh -->
+              <div class="mt-3 aspect-video bg-emerald-100/60 rounded-xl overflow-hidden border border-emerald-200 flex items-center justify-center relative">
+                <img id="img-menu-l" src="https://placehold.co/600x400/d1fae5/065f46?text=Chưa+có+ảnh+bữa+trưa" alt="Ảnh bữa trưa" class="w-full h-full object-cover">
+              </div>
+
+              <div class="mt-3">
+                <label class="block text-xs font-bold text-emerald-900 mb-1">Món ăn bữa trưa:</label>
+                <textarea id="menu-desc-l" onchange="saveMenuDescription('l', this.value)" rows="3" placeholder="Ví dụ: Cơm tám, thịt kho trứng, cá rán sốt cà, bắp cải xào, canh bí sườn..." class="w-full p-2.5 bg-white border border-emerald-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-400"></textarea>
+              </div>
+            </div>
+            <p class="text-[10px] text-emerald-700 italic">* Tự động lưu sau khi nhập món ăn hoặc đổi ảnh.</p>
+          </div>
+
+          <!-- BỮA CHIỀU -->
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50/50 border border-blue-200 flex flex-col justify-between space-y-3">
+            <div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    <i class="fa-solid fa-moon"></i>
+                  </span>
+                  <div>
+                    <h3 class="font-bold text-blue-950 text-sm">BỮA CHIỀU (TỐI)</h3>
+                    <span class="text-[11px] text-blue-700 font-medium">Bữa chính chiều nội trú</span>
+                  </div>
+                </div>
+                <label class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold cursor-pointer transition shadow-xs flex items-center gap-1">
+                  <i class="fa-solid fa-upload"></i> Đổi ảnh
+                  <input type="file" accept="image/*" class="hidden" onchange="handleMenuImageUpload(event, 'd')">
+                </label>
+              </div>
+
+              <!-- Khung hiển thị ảnh -->
+              <div class="mt-3 aspect-video bg-blue-100/60 rounded-xl overflow-hidden border border-blue-200 flex items-center justify-center relative">
+                <img id="img-menu-d" src="https://placehold.co/600x400/dbeafe/1e40af?text=Chưa+có+ảnh+bữa+chiều" alt="Ảnh bữa chiều" class="w-full h-full object-cover">
+              </div>
+
+              <div class="mt-3">
+                <label class="block text-xs font-bold text-blue-900 mb-1">Món ăn bữa chiều:</label>
+                <textarea id="menu-desc-d" onchange="saveMenuDescription('d', this.value)" rows="3" placeholder="Ví dụ: Cơm nóng, gà rang gừng, đậu phụ sốt thịt băm, rau ngót nấu thịt, dưa hấu..." class="w-full p-2.5 bg-white border border-blue-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+              </div>
+            </div>
+            <p class="text-[10px] text-blue-700 italic">* Tự động lưu sau khi nhập món ăn hoặc đổi ảnh.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 8: SỔ NỀ NẾP & KỶ LUẬT -->
+    <!-- ========================================== -->
+    <section id="tab-discipline" class="tab-content hidden space-y-4">
+      <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-scale-balanced text-indigo-600"></i>
+              <span>Sổ Theo Dõi Nề Nếp & Kỷ Luật Nội Trú (Si Ma Cai)</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Ghi chép các trường hợp khen thưởng gương tốt, nhắc nhở hoặc vi phạm nội quy KTX và nhà ăn</p>
+          </div>
+          <button onclick="openAddDisciplineModal()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i> + Thêm Ghi Chép Nề Nếp
+          </button>
+        </div>
+
+        <div class="overflow-x-auto mt-4 rounded-xl border border-slate-200">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 font-bold text-slate-700 border-b border-slate-200 uppercase">
+              <tr>
+                <th class="py-2.5 px-3 text-center w-12 text-rose-600">STT</th>
+                <th class="py-2.5 px-3 text-center">Ngày ghi</th>
+                <th class="py-2.5 px-4 font-bold text-slate-900">Họ và Tên Học Sinh</th>
+                <th class="py-2.5 px-3 text-center font-bold text-blue-700">Lớp</th>
+                <th class="py-2.5 px-3 text-center font-bold text-purple-700">Phòng KTX</th>
+                <th class="py-2.5 px-3 text-center">Phân loại</th>
+                <th class="py-2.5 px-4">Nội dung sự việc / Đánh giá</th>
+                <th class="py-2.5 px-3 text-center font-bold">Điểm thi đua</th>
+                <th class="py-2.5 px-3 text-center w-24 bg-blue-50 text-blue-900">Sửa HS</th>
+              </tr>
+            </thead>
+            <tbody id="discipline-table-body" class="divide-y divide-slate-100">
+              <!-- Render tự động từ state.disciplines -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: THÊM GHI CHÉP NỀ NẾP & KỶ LUẬT -->
+  <div id="discipline-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-scale-balanced text-indigo-600"></i>
+          <span>Thêm Ghi Chép Nề Nếp / Kỷ Luật</span>
+        </h3>
+        <button onclick="closeDisciplineModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSaveDiscipline(event)" class="mt-4 space-y-3.5 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Ngày ghi:</label>
+            <input type="date" id="dis-date" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Phân loại:</label>
+            <select id="dis-type" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold">
+              <option value="Vi phạm">Vi phạm nội quy</option>
+              <option value="Nhắc nhở">Nhắc nhở nề nếp</option>
+              <option value="Khen thưởng">Khen thưởng / Biểu dương</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Học sinh liên quan (*):</label>
+          <select id="dis-student" required class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium outline-none">
+            <!-- Render học sinh -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Điểm thi đua (Cộng / Trừ):</label>
+          <input type="number" id="dis-points" value="-2" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono font-bold">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nội dung chi tiết sự việc (*):</label>
+          <textarea id="dis-content" required rows="3" placeholder="Ghi rõ hành vi, thời gian, địa điểm (ví dụ: Đi ngủ muộn sau 21h30, không trực nhật phòng 1.2, nhặt được của rơi...)" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none"></textarea>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeDisciplineModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl">Đóng</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow">Lưu Ghi Chép</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SỬA HỌC SINH (LIÊN THÔNG TOÀN BỘ) -->
+  <div id="student-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2" id="modal-student-title">
+          <i class="fa-solid fa-user-pen text-blue-600"></i>
+          <span>Chỉnh Sửa Thông Tin Học Sinh</span>
+        </h3>
+        <button onclick="closeStudentModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSaveStudent(event)" class="mt-4 space-y-3 text-xs">
+        <input type="hidden" id="modal-student-id">
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Họ và Tên Học Sinh (*):</label>
+          <input type="text" id="modal-student-name" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-900">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Lớp Học (*):</label>
+            <select id="modal-student-class" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-blue-700">
+              <option value="6A">Lớp 6A (GVCN: Long Thị Thanh Huyền)</option>
+              <option value="6B">Lớp 6B (GVCN: Nguyễn Thị Thanh Nga)</option>
+              <option value="7A">Lớp 7A (GVCN: Trần Thị Bích Thủy)</option>
+              <option value="7B">Lớp 7B (GVCN: Lê Dịu Loan)</option>
+              <option value="8A">Lớp 8A (GVCN: Trần Khắc Thanh)</option>
+              <option value="8B">Lớp 8B (GVCN: Đinh Thị Thủy)</option>
+              <option value="9A">Lớp 9A (GVCN: Trần Quyết Thắng)</option>
+              <option value="9B">Lớp 9B (GVCN: Lê Trung Nghĩa)</option>
+              <option value="10A">Lớp 10A (GVCN: Nguyễn Ngọc Linh)</option>
+              <option value="10B">Lớp 10B (GVCN: Hoàng Thị Lợi)</option>
+              <option value="10C">Lớp 10C (GVCN: Vừ Thị Dung)</option>
+              <option value="11A">Lớp 11A (GVCN: Nguyễn Thị Tình)</option>
+              <option value="11B">Lớp 11B (GVCN: Lùng Ngấn Thăng)</option>
+              <option value="12A">Lớp 12A (GVCN: Dương Thị Huyền)</option>
+              <option value="12B">Lớp 12B (GVCN: Lý Thị Dần)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Phòng KTX (*):</label>
+            <select id="modal-student-room" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-purple-700">
+              <!-- Render 57 phòng động -->
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Ngày sinh:</label>
+            <input type="date" id="modal-student-dob" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Giới tính:</label>
+            <select id="modal-student-gender" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium">
+              <option value="Nam">Nam</option>
+              <option value="Nữ">Nữ</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Dân tộc:</label>
+            <input type="text" id="modal-student-ethnic" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="Mông, Dao...">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Trạng thái KTX:</label>
+            <select id="modal-student-status" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold">
+              <option value="Đang ở KTX">Đang ở KTX</option>
+              <option value="Về nhà">Về nhà (Có phép)</option>
+              <option value="Nghỉ ốm">Nghỉ ốm (Phòng YT)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">SĐT Phụ huynh:</label>
+            <input type="text" id="modal-student-phone" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono" placeholder="09xx...">
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <button type="button" onclick="deleteCurrentStudent()" id="btn-delete-student" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-xl transition">
+            <i class="fa-solid fa-trash-can mr-1"></i> Xóa em này
+          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeStudentModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl">Đóng</button>
+            <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow">Lưu Thay Đổi</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ĐIỂM DANH THEO PHÒNG KTX (57 PHÒNG) -->
+  <div id="room-attendance-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-moon text-indigo-600"></i>
+              <span id="room-att-title">Kiểm Diện KTX Buổi Tối (Sau 21h30)</span>
+            </h3>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-black border border-indigo-200 animate-pulse">
+              <i class="fa-regular fa-clock mr-1"></i>Sau 21h30
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Kiểm diện quân số ngủ đêm tại từng phòng KTX. Không điểm danh theo bữa ăn. Mặc định có mặt đầy đủ.</p>
+        </div>
+        <button onclick="closeRoomAttendanceModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Thanh thông tin thời gian & kiểm tra giờ 21h30 -->
+      <div id="room-att-time-alert" class="mt-2.5 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm"></i>
+          <span><strong>Quy định giờ kiểm diện:</strong> Thực hiện vào lúc <strong>21h30 hàng đêm</strong> khi học sinh về phòng ngủ.</span>
+        </div>
+        <span id="room-att-current-clock" class="font-mono font-bold text-xs bg-white px-2 py-0.5 rounded border border-amber-300">--:--:--</span>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 py-3 border-b border-slate-100 text-xs">
+        <div class="flex items-center gap-2">
+          <label class="font-bold text-slate-700">Chọn Phòng:</label>
+          <select id="room-att-select" onchange="renderRoomAttendanceMembers()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-purple-700 outline-none">
+            <!-- 57 phòng -->
+          </select>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <label class="font-bold text-slate-700">Ngày:</label>
+          <input type="date" id="room-att-date" onchange="renderRoomAttendanceMembers()" class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-xl font-mono outline-none">
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="setAllRoomPresentNight()" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg font-bold text-[11px]">
+            <i class="fa-solid fa-bed mr-1"></i>Cả phòng ngủ đủ
+          </button>
+          <button type="button" onclick="setAllRoomAbsentNight()" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-lg font-bold text-[11px]">
+            <i class="fa-solid fa-user-xmark mr-1"></i>Cả phòng vắng đêm
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-y-auto flex-1 mt-2">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="bg-indigo-50 font-bold text-slate-700 border-b border-indigo-100 uppercase text-[11px]">
+            <tr>
+              <th class="py-2.5 px-3 text-center w-10 text-rose-600">STT</th>
+              <th class="py-2.5 px-4 font-bold text-slate-800">Họ và Tên</th>
+              <th class="py-2.5 px-2 text-center text-blue-700">Lớp</th>
+              <th class="py-2.5 px-3 text-center">Có Mặt Trong Phòng (21h30)</th>
+              <th class="py-2.5 px-3">Tình Trạng / Lý Do Nếu Vắng</th>
+              <th class="py-2.5 px-3">Ghi chú cụ thể</th>
+            </tr>
+          </thead>
+          <tbody id="room-att-tbody" class="divide-y divide-slate-100">
+            <!-- Render JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between mt-2">
+        <span class="text-xs text-slate-500 italic">* Dữ liệu kiểm diện đêm tự động liên thông sang Báo Cáo KTX và Sổ Nề Nếp.</span>
+        <div class="flex items-center gap-2">
+          <button onclick="closeRoomAttendanceModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Đóng</button>
+          <button onclick="saveRoomAttendance()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu Kiểm Diện Phòng (21h30)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NHẬP TOÀN TRƯỜNG TỪ FILE EXCEL -->
+  <div id="excel-import-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-file-excel text-emerald-600"></i>
+            <span>Nhập Danh Sách Học Sinh Toàn Trường Từ Excel</span>
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">Hỗ trợ tệp <code>.xls</code>, <code>.xlsx</code> (như tệp <em>học sinh toàn trường (8).xls</em>). Tự động nhận diện cột và lớp.</p>
+        </div>
+        <button onclick="closeExcelImportModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-3.5 text-xs flex-1 overflow-y-auto">
+        <div class="border-2 border-dashed border-emerald-300 bg-emerald-50/50 rounded-2xl p-5 text-center hover:bg-emerald-50 transition cursor-pointer relative">
+          <input type="file" id="excel-file-uploader" accept=".xls,.xlsx" onchange="handleExcelFileUpload(event)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+          <div class="space-y-1.5 pointer-events-none">
+            <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-600"></i>
+            <p class="font-bold text-slate-800 text-sm">Bấm để chọn tệp Excel hoặc kéo thả tệp vào đây</p>
+            <p class="text-slate-500 text-[11px]">Chấp nhận định dạng: .xls (Excel 97-2003) hoặc .xlsx (Excel hiện đại)</p>
+          </div>
+        </div>
+
+        <!-- Trạng thái nhận diện -->
+        <div id="excel-import-preview-box" class="hidden space-y-2">
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold">
+                <i class="fa-solid fa-check"></i>
+              </span>
+              <div>
+                <p class="font-bold text-slate-800 text-xs" id="excel-file-name">Tệp: hoc sinh toan truong.xls</p>
+                <p class="text-[11px] text-emerald-700" id="excel-parsed-summary">Đã đọc thành công 0 học sinh</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[11px]" id="excel-total-count">0 em</span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <p class="font-bold text-slate-700 mb-1.5">Phân bổ theo lớp phát hiện được:</p>
+            <div id="excel-class-breakdown" class="flex flex-wrap gap-1.5 text-[11px]">
+              <!-- Render tự động -->
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-[11px] flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-blue-600 text-sm"></i>
+            <span>Tùy chọn: Chọn <strong>"Ghi đè toàn bộ"</strong> để thay thế danh sách cũ, hoặc <strong>"Bổ sung"</strong> để giữ nguyên học sinh hiện có.</span>
+          </div>
+
+          <div class="flex items-center gap-3 pt-1">
+            <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-700">
+              <input type="radio" name="excel-import-mode" value="replace" checked class="text-emerald-600">
+              <span>Ghi đè (Xóa danh sách mẫu, thay bằng dữ liệu file Excel)</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-700">
+              <input type="radio" name="excel-import-mode" value="append" class="text-emerald-600">
+              <span>Bổ sung thêm vào danh sách</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between mt-3">
+        <button onclick="downloadSampleExcel()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1">
+          <i class="fa-solid fa-download"></i> Tải file mẫu (.xlsx)
+        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="closeExcelImportModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Đóng</button>
+          <button id="btn-confirm-import-excel" disabled onclick="applyExcelImport()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5">
+            <i class="fa-solid fa-cloud-arrow-down"></i> Đưa Toàn Bộ Học Sinh Vào App
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BÁO VẮNG NHANH CHO HỌC SINH -->
+  <div id="quick-absence-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-user-xmark text-rose-600"></i>
+          <span>Báo Vắng Bữa Ăn Học Sinh (Tự Điền P)</span>
+        </h3>
+        <button onclick="closeQuickAbsenceModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSaveQuickAbsence(event)" class="mt-4 space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Ngày Báo Vắng:</label>
+          <input type="date" id="qa-date" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono outline-none">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Chọn Học Sinh:</label>
+          <select id="qa-student" required class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl font-medium outline-none">
+            <!-- Render học sinh -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1.5">Chọn Bữa Báo Vắng (Tự Động Ghi Chữ "P"):</label>
+          <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <label class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer">
+              <input type="checkbox" id="qa-absent-b" class="w-4 h-4 text-rose-600 rounded">
+              <span class="font-bold text-amber-800">Vắng Sáng (P)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer">
+              <input type="checkbox" id="qa-absent-l" class="w-4 h-4 text-rose-600 rounded">
+              <span class="font-bold text-emerald-800">Vắng Trưa (P)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer">
+              <input type="checkbox" id="qa-absent-d" class="w-4 h-4 text-rose-600 rounded">
+              <span class="font-bold text-blue-800">Vắng Chiều (P)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 bg-rose-50 rounded-lg border border-rose-200 cursor-pointer">
+              <input type="checkbox" id="qa-absent-dorm" onchange="toggleQaAllDay(this.checked)" class="w-4 h-4 text-rose-600 rounded">
+              <span class="font-bold text-rose-700">Vắng Cả Ngày / KTX</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Lý Do Vắng / Ghi Chú:</label>
+          <input type="text" id="qa-reason" placeholder="Ví dụ: Về nhà cuối tuần, ốm nghỉ tại phòng y tế..." class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none">
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeQuickAbsenceModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl">Hủy</button>
+          <button type="submit" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow">Xác Nhận Báo Vắng (P)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: XEM CHI TIẾT PHÒNG KTX -->
+  <div id="room-detail-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-bold text-slate-800 flex items-center gap-2" id="room-detail-title">
+            <i class="fa-solid fa-door-open text-purple-600"></i>
+            <span>Thông Tin Chi Tiết Phòng KTX</span>
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5" id="room-detail-subtitle">Danh sách học sinh đang lưu trú</p>
+        </div>
+        <button onclick="closeRoomDetailModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="overflow-y-auto flex-1 mt-3">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="bg-slate-50 font-bold text-slate-700 border-b border-slate-200 uppercase">
+            <tr>
+              <th class="py-2 px-3 text-center w-10 text-rose-600">STT</th>
+              <th class="py-2 px-3 text-center font-bold text-blue-700">Lớp</th>
+              <th class="py-2 px-4 font-bold text-slate-900">Họ và Tên</th>
+              <th class="py-2 px-3 text-center">Ngày sinh</th>
+              <th class="py-2 px-2 text-center">Giới tính</th>
+              <th class="py-2 px-3 text-center">Dân tộc</th>
+              <th class="py-2 px-3 text-center w-24 bg-blue-50 text-blue-900">Sửa HS</th>
+            </tr>
+          </thead>
+          <tbody id="room-members-tbody" class="divide-y divide-slate-100">
+            <!-- Render JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-end mt-2">
+        <button onclick="closeRoomDetailModal()" class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"></div>
+
+  <script>
+    /* =========================================================
+       DỮ LIỆU CỐT LÕI: 15 LỚP & GVCN, 57 PHÒNG KTX
+       ========================================================= */
+    const TEACHERS_MAP = {
+      '6A': { teacher: 'Long Thị Thanh Huyền', count: 34 },
+      '6B': { teacher: 'Nguyễn Thị Thanh Nga', count: 35 },
+      '7A': { teacher: 'Trần Thị Bích Thủy', count: 34 },
+      '7B': { teacher: 'Lê Dịu Loan', count: 35 },
+      '8A': { teacher: 'Trần Khắc Thanh', count: 35 },
+      '8B': { teacher: 'Đinh Thị Thủy', count: 35 },
+      '9A': { teacher: 'Trần Quyết Thắng', count: 35 },
+      '9B': { teacher: 'Lê Trung Nghĩa', count: 35 },
+      '10A': { teacher: 'Nguyễn Ngọc Linh', count: 35 },
+      '10B': { teacher: 'Hoàng Thị Lợi', count: 35 },
+      '10C': { teacher: 'Vừ Thị Dung', count: 34 },
+      '11A': { teacher: 'Nguyễn Thị Tình', count: 34 },
+      '11B': { teacher: 'Lùng Ngấn Thăng', count: 34 },
+      '12A': { teacher: 'Dương Thị Huyền', count: 34 },
+      '12B': { teacher: 'Lý Thị Dần', count: 34 }
+    };
+
+    // Khởi tạo 57 phòng KTX chuẩn (23 Nam, 34 Nữ)
+    const DORM_ROOMS = [];
+    // Nam: Tầng 1: 1.2 - 1.8 (7 phòng)
+    for (let i = 2; i <= 8; i++) {
+      DORM_ROOMS.push({ id: `P.1.${i}-Nam`, code: `1.${i}`, name: `Phòng 1.${i}`, floor: 1, block: 'Nam', max: 8 });
+    }
+    // Nam: Tầng 2: 2.1 - 2.8 (8 phòng)
+    for (let i = 1; i <= 8; i++) {
+      DORM_ROOMS.push({ id: `P.2.${i}-Nam`, code: `2.${i}`, name: `Phòng 2.${i}`, floor: 2, block: 'Nam', max: 8 });
+    }
+    // Nam: Tầng 3: 3.2 - 3.8 & 3.1 (8 phòng)
+    for (let i = 1; i <= 8; i++) {
+      DORM_ROOMS.push({ id: `P.3.${i}-Nam`, code: `3.${i}`, name: `Phòng 3.${i}`, floor: 3, block: 'Nam', max: 8 });
+    }
+
+    // Nữ: Tầng 1: 1.9 - 1.20 (12 phòng)
+    for (let i = 9; i <= 20; i++) {
+      DORM_ROOMS.push({ id: `P.1.${i}-Nữ`, code: `1.${i}`, name: `Phòng 1.${i}`, floor: 1, block: 'Nữ', max: 8 });
+    }
+    // Nữ: Tầng 2: 2.9 - 2.20 (12 phòng)
+    for (let i = 9; i <= 20; i++) {
+      DORM_ROOMS.push({ id: `P.2.${i}-Nữ`, code: `2.${i}`, name: `Phòng 2.${i}`, floor: 2, block: 'Nữ', max: 8 });
+    }
+    // Nữ: Tầng 3: 3.9 - 3.18 (10 phòng)
+    for (let i = 9; i <= 18; i++) {
+      DORM_ROOMS.push({ id: `P.3.${i}-Nữ`, code: `3.${i}`, name: `Phòng 3.${i}`, floor: 3, block: 'Nữ', max: 8 });
+    }
+
+    const SAMPLE_STUDENTS = [
+      { id: 'SMC-6A-01', name: 'Sùng Thị Thu Băng', className: '6A', gender: 'Nữ', dob: '2014-03-15', ethnic: 'Mông', room: 'P.1.9-Nữ', status: 'Đang ở KTX', phone: '0981123456' },
+      { id: 'SMC-6A-02', name: 'Giàng Thị Bầu', className: '6A', gender: 'Nữ', dob: '2014-06-20', ethnic: 'Mông', room: 'P.1.9-Nữ', status: 'Đang ở KTX', phone: '0982234567' },
+      { id: 'SMC-6A-03', name: 'Thào A Dơ', className: '6A', gender: 'Nam', dob: '2014-09-10', ethnic: 'Mông', room: 'P.1.2-Nam', status: 'Đang ở KTX', phone: '0983345678' },
+      { id: 'SMC-6A-04', name: 'Vàng Seo Sính', className: '6A', gender: 'Nam', dob: '2014-11-05', ethnic: 'Mông', room: 'P.1.2-Nam', status: 'Đang ở KTX', phone: '0984456789' },
+      { id: 'SMC-6B-01', name: 'Cư Seo Pao', className: '6B', gender: 'Nam', dob: '2014-04-12', ethnic: 'Mông', room: 'P.1.3-Nam', status: 'Đang ở KTX', phone: '0985567890' },
+      { id: 'SMC-6B-02', name: 'Lù Thị Mỷ', className: '6B', gender: 'Nữ', dob: '2014-08-25', ethnic: 'Nùng', room: 'P.1.10-Nữ', status: 'Đang ở KTX', phone: '0986678901' },
+      { id: 'SMC-7A-01', name: 'Vàng Thị Dế', className: '7A', gender: 'Nữ', dob: '2013-05-18', ethnic: 'Mông', room: 'P.1.11-Nữ', status: 'Đang ở KTX', phone: '0987789012' },
+      { id: 'SMC-7A-02', name: 'Hảng Seo Tráng', className: '7A', gender: 'Nam', dob: '2013-02-14', ethnic: 'Mông', room: 'P.1.4-Nam', status: 'Đang ở KTX', phone: '0988890123' },
+      { id: 'SMC-8A-01', name: 'Giàng A Lử', className: '8A', gender: 'Nam', dob: '2012-07-22', ethnic: 'Mông', room: 'P.2.1-Nam', status: 'Đang ở KTX', phone: '0989901234' },
+      { id: 'SMC-9A-01', name: 'Lý A Sáng', className: '9A', gender: 'Nam', dob: '2011-10-30', ethnic: 'Dao', room: 'P.2.2-Nam', status: 'Đang ở KTX', phone: '0912345678' },
+      { id: 'SMC-10A-01', name: 'Lồ Thị Mai', className: '10A', gender: 'Nữ', dob: '2010-01-15', ethnic: 'Mông', room: 'P.2.9-Nữ', status: 'Đang ở KTX', phone: '0913456789' },
+      { id: 'SMC-11A-01', name: 'Cư Seo Say', className: '11A', gender: 'Nam', dob: '2009-12-04', ethnic: 'Mông', room: 'P.3.1-Nam', status: 'Đang ở KTX', phone: '0914567890' },
+      { id: 'SMC-12A-01', name: 'Sùng Thị Hoa', className: '12A', gender: 'Nữ', dob: '2008-03-29', ethnic: 'Mông', room: 'P.3.9-Nữ', status: 'Đang ở KTX', phone: '0915678901' },
+      { id: 'SMC-12B-01', name: 'Vàng A Lềnh', className: '12B', gender: 'Nam', dob: '2008-09-19', ethnic: 'Mông', room: 'P.3.2-Nam', status: 'Đang ở KTX', phone: '0916789012' }
+    ];
+
+    let state = {
+      students: [],
+      dailyMeals: {}, // { 'YYYY-MM-DD': { studentId: { present: true, b: true, l: true, d: true, note: '' } } }
+      menuData: {},
+      disciplines: []
+    };
+
+    // Gắn state lên window để mô-đun đồng bộ trực tuyến có thể truy xuất tức thì
+    window.state = state;
+    window.currentActiveTabId = 'tab-attendance';
+
+    function refreshCurrentActiveTab() {
+      if (window.currentActiveTabId === 'tab-attendance') renderAttendanceTable();
+      else if (window.currentActiveTabId === 'tab-daily-summary') renderDailySummary();
+      else if (window.currentActiveTabId === 'tab-settlement') renderSettlementTable();
+      else if (window.currentActiveTabId === 'tab-dorm') renderDormRooms();
+      else if (window.currentActiveTabId === 'tab-classes') renderClassesList();
+      else if (window.currentActiveTabId === 'tab-students') renderStudentsTable();
+      else if (window.currentActiveTabId === 'tab-menu') renderMenuTab();
+      else if (window.currentActiveTabId === 'tab-discipline') renderDisciplineTable();
+    }
+    window.refreshCurrentActiveTab = refreshCurrentActiveTab;
+
+    function loadState() {
+      try {
+        const savedStudents = localStorage.getItem('smc_students_data_v2');
+        if (savedStudents) {
+          state.students = JSON.parse(savedStudents);
+        } else {
+          state.students = [...SAMPLE_STUDENTS];
+        }
+        const savedMeals = localStorage.getItem('smc_daily_meals_data_v2');
+        if (savedMeals) state.dailyMeals = JSON.parse(savedMeals);
+        const savedMenu = localStorage.getItem('smc_menu_data_v2');
+        if (savedMenu) state.menuData = JSON.parse(savedMenu);
+        const savedDis = localStorage.getItem('smc_disciplines_data_v2');
+        if (savedDis) state.disciplines = JSON.parse(savedDis);
+      } catch (e) {
+        console.error("Lỗi nạp bộ nhớ:", e);
+        state.students = [...SAMPLE_STUDENTS];
+      }
+    }
+
+    let roomClockTimer = null;
+    let tempImportedStudents = [];
+
+    function updateRoomClock() {
+      const el = document.getElementById('room-att-current-clock');
+      if (!el) return;
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      el.textContent = `${h}:${m}:${s}`;
+
+      const alertBox = document.getElementById('room-att-time-alert');
+      if (alertBox) {
+        // Kiểm tra xem đã qua 21h30 chưa (>= 21:30)
+        const isPast2130 = (now.getHours() > 21) || (now.getHours() === 21 && now.getMinutes() >= 30);
+        if (isPast2130) {
+          alertBox.className = "mt-2.5 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-center justify-between";
+          alertBox.innerHTML = `
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+              <span><strong>Đúng giờ kiểm diện:</strong> Hiện tại đã sau 21h30, tiến hành kiểm tra số lượng học sinh trong phòng.</span>
+            </div>
+            <span class="font-mono font-bold text-xs bg-white px-2 py-0.5 rounded border border-emerald-300">${h}:${m}:${s}</span>
+          `;
+        } else {
+          alertBox.className = "mt-2.5 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center justify-between";
+          alertBox.innerHTML = `
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm"></i>
+              <span><strong>Quy định giờ kiểm diện:</strong> Thực hiện vào lúc <strong>21h30 hàng đêm</strong> khi học sinh về phòng ngủ.</span>
+            </div>
+            <span class="font-mono font-bold text-xs bg-white px-2 py-0.5 rounded border border-amber-300">${h}:${m}:${s}</span>
+          `;
+        }
+      }
+    }
+
+    function saveAllToStorage(targetDate = null) {
+      try {
+        localStorage.setItem('smc_students_data_v2', JSON.stringify(state.students));
+        localStorage.setItem('smc_daily_meals_data_v2', JSON.stringify(state.dailyMeals));
+        localStorage.setItem('smc_menu_data_v2', JSON.stringify(state.menuData));
+        localStorage.setItem('smc_disciplines_data_v2', JSON.stringify(state.disciplines));
+
+        // Phát sóng đồng thời lên máy chủ trực tuyến cho tất cả các máy tính khác
+        if (window.cloudSyncManager) {
+          window.cloudSyncManager.syncStudents(state.students);
+          if (targetDate && state.dailyMeals[targetDate]) {
+            window.cloudSyncManager.syncDailyMeal(targetDate, state.dailyMeals[targetDate]);
+          } else {
+            // Đồng bộ ngày hiện tại đang xem
+            const curDate = document.getElementById('attendance-date')?.value || new Date().toISOString().split('T')[0];
+            if (state.dailyMeals[curDate]) {
+              window.cloudSyncManager.syncDailyMeal(curDate, state.dailyMeals[curDate]);
+            }
+          }
+          window.cloudSyncManager.syncMenu(state.menuData);
+          window.cloudSyncManager.syncDisciplines(state.disciplines);
+        }
+      } catch (err) {
+        console.error("Lỗi lưu trữ:", err);
+      }
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return dateStr;
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const isSuccess = type === 'success';
+      toast.className = `px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2 text-white transition-all transform duration-300 translate-y-2 opacity-0 ${isSuccess ? 'bg-emerald-600' : 'bg-rose-600'}`;
+      toast.innerHTML = `<i class="fa-solid ${isSuccess ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i><span>${message}</span>`;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    /* =========================================================
+       SAO LƯU & PHỤC HỒI DỮ LIỆU ĐA THIẾT BỊ
+       ========================================================= */
+    function exportFullBackupData() {
+      try {
+        const fullBackup = {
+          app: "QuanLyNoiTru_SiMaCai",
+          version: "2026-2027",
+          exportedAt: new Date().toISOString(),
+          students: state.students,
+          dailyMeals: state.dailyMeals,
+          menuData: state.menuData,
+          disciplines: state.disciplines
+        };
+
+        const jsonStr = JSON.stringify(fullBackup, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const dateStr = new Date().toISOString().split('T')[0];
+        a.href = url;
+        a.download = `DuLieu_NoiTru_SiMaCai_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast("Đã tải tệp sao lưu dữ liệu toàn trường về máy!");
+      } catch (e) {
+        console.error("Lỗi xuất sao lưu:", e);
+        showToast("Không thể xuất tệp sao lưu!", "error");
+      }
+    }
+
+    function triggerRestoreBackup() {
+      const input = document.getElementById('backup-file-input');
+      if (input) input.click();
+    }
+
+    function handleRestoreBackupFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const content = JSON.parse(e.target.result);
+          if (!content.students || !Array.isArray(content.students)) {
+            showToast("Tệp sao lưu không đúng định dạng của trường Si Ma Cai!", "error");
+            return;
+          }
+
+          state.students = content.students;
+          state.dailyMeals = content.dailyMeals || {};
+          state.menuData = content.menuData || {};
+          state.disciplines = content.disciplines || [];
+
+          saveAllToStorage();
+          refreshCurrentActiveTab();
+
+          if (window.pushDataToCloud) {
+            await window.pushDataToCloud();
+          }
+
+          showToast("Đã phục hồi dữ liệu và đồng bộ lên tất cả điện thoại thành công!");
+        } catch (err) {
+          console.error("Lỗi phục hồi:", err);
+          showToast("Tệp sao lưu bị lỗi, không đọc được dữ liệu!", "error");
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    /* Khởi tạo dữ liệu bữa ăn nếu chưa có cho ngày cụ thể (mặc định ăn đủ +) */
+    function ensureMealRecord(dateStr) {
+      if (!state.dailyMeals[dateStr]) {
+        state.dailyMeals[dateStr] = {};
+      }
+      state.students.forEach(s => {
+        if (!state.dailyMeals[dateStr][s.id]) {
+          state.dailyMeals[dateStr][s.id] = {
+            present: s.status === 'Đang ở KTX',
+            b: s.status === 'Đang ở KTX',
+            l: s.status === 'Đang ở KTX',
+            d: s.status === 'Đang ở KTX',
+            note: s.status === 'Đang ở KTX' ? '' : s.status
+          };
+        }
+      });
+    }
+
+    function switchTab(tabId) {
+      window.currentActiveTabId = tabId;
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-700/80', 'text-white', 'shadow-inner');
+        btn.classList.add('text-slate-300');
+      });
+
+      const target = document.getElementById(tabId);
+      const targetNav = document.getElementById(`nav-${tabId}`);
+      if (target) target.classList.remove('hidden');
+      if (targetNav) {
+        targetNav.classList.add('bg-emerald-700/80', 'text-white', 'shadow-inner');
+        targetNav.classList.remove('text-slate-300');
+      }
+
+      if (tabId === 'tab-attendance') renderAttendanceTable();
+      if (tabId === 'tab-daily-summary') renderDailySummary();
+      if (tabId === 'tab-settlement') renderSettlementTable();
+      if (tabId === 'tab-dorm') renderDormRooms();
+      if (tabId === 'tab-classes') renderClassesList();
+      if (tabId === 'tab-students') renderStudentsTable();
+      if (tabId === 'tab-menu') renderMenuTab();
+      if (tabId === 'tab-discipline') renderDisciplineTable();
+    }
+
+    /* =========================================================
+       TAB 1: ĐIỂM DANH CÁC BỮA ĂN (S - T - C)
+       ========================================================= */
+    let currentMealView = 'ALL'; // 'ALL', 'b', 'l', 'd'
+
+    function filterByMealView(mealKey) {
+      currentMealView = mealKey;
+      const btnAll = document.getElementById('btn-view-all-meals');
+      const btnB = document.getElementById('btn-view-b');
+      const btnL = document.getElementById('btn-view-l');
+      const btnD = document.getElementById('btn-view-d');
+
+      const resetClass = 'px-2.5 py-1 rounded-md text-slate-700 hover:text-slate-900 transition';
+      const activeClass = 'px-2.5 py-1 rounded-md text-white shadow-xs font-bold transition';
+
+      if (btnAll) btnAll.className = (mealKey === 'ALL') ? `${activeClass} bg-emerald-600` : resetClass;
+      if (btnB) btnB.className = (mealKey === 'b') ? `${activeClass} bg-amber-600` : resetClass;
+      if (btnL) btnL.className = (mealKey === 'l') ? `${activeClass} bg-emerald-600` : resetClass;
+      if (btnD) btnD.className = (mealKey === 'd') ? `${activeClass} bg-blue-600` : resetClass;
+
+      renderAttendanceTable();
+    }
+
+    function quickBatchAbsenceMeal(mealKey) {
+      openQuickAbsenceModal();
+      document.getElementById('qa-absent-b').checked = (mealKey === 'b');
+      document.getElementById('qa-absent-l').checked = (mealKey === 'l');
+      document.getElementById('qa-absent-d').checked = (mealKey === 'd');
+    }
+
+    function handleAttendanceDateChange() {
+      renderAttendanceTable();
+    }
+
+    function renderAttendanceTable() {
+      const dateVal = document.getElementById('attendance-date')?.value || new Date().toISOString().split('T')[0];
+      const classFilter = document.getElementById('attendance-class-filter')?.value || 'ALL';
+      ensureMealRecord(dateVal);
+
+      const dayMeals = state.dailyMeals[dateVal];
+      const tbody = document.getElementById('attendance-table-body');
+
+      const filtered = state.students.filter(s => classFilter === 'ALL' || s.className === classFilter);
+
+      let sumB = 0, sumL = 0, sumD = 0;
+      let absentB = 0, absentL = 0, absentD = 0;
+
+      state.students.forEach(s => {
+        const m = dayMeals[s.id] || { present: true, b: true, l: true, d: true, note: '' };
+        if (m.b) sumB++; else absentB++;
+        if (m.l) sumL++; else absentL++;
+        if (m.d) sumD++; else absentD++;
+      });
+
+      const elSumB = document.getElementById('meal-sum-breakfast');
+      const elSumL = document.getElementById('meal-sum-lunch');
+      const elSumD = document.getElementById('meal-sum-dinner');
+      const elAbsB = document.getElementById('meal-absent-breakfast');
+      const elAbsL = document.getElementById('meal-absent-lunch');
+      const elAbsD = document.getElementById('meal-absent-dinner');
+
+      if (elSumB) elSumB.textContent = sumB;
+      if (elSumL) elSumL.textContent = sumL;
+      if (elSumD) elSumD.textContent = sumD;
+      if (elAbsB) elAbsB.textContent = `${absentB} vắng (P)`;
+      if (elAbsL) elAbsL.textContent = `${absentL} vắng (P)`;
+      if (elAbsD) elAbsD.textContent = `${absentD} vắng (P)`;
+
+      const totalMealsToday = sumB + sumL + sumD;
+      const elTotal = document.getElementById('meal-sum-total');
+      if (elTotal) elTotal.textContent = `${totalMealsToday} bữa`;
+
+      tbody.innerHTML = filtered.map((s, idx) => {
+        const m = dayMeals[s.id] || { present: true, b: true, l: true, d: true, note: '' };
+        const totalStudentMeals = (m.b ? 1 : 0) + (m.l ? 1 : 0) + (m.d ? 1 : 0);
+        const roomObj = DORM_ROOMS.find(r => r.id === s.room);
+        const roomCode = roomObj ? roomObj.code : s.room;
+
+        const showB = (currentMealView === 'ALL' || currentMealView === 'b');
+        const showL = (currentMealView === 'ALL' || currentMealView === 'l');
+        const showD = (currentMealView === 'ALL' || currentMealView === 'd');
+
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100 ${!m.present || totalStudentMeals < 3 ? 'bg-amber-50/40' : ''}">
+            <td class="py-2.5 px-3 text-center text-slate-400 font-mono font-bold">${idx + 1}</td>
+            <td class="py-2.5 px-3 text-center font-bold text-blue-700">${s.className}</td>
+            <td class="py-2.5 px-4 font-bold text-slate-900">${s.name}</td>
+            <td class="py-2.5 px-2 text-center font-bold text-purple-700 font-mono">${roomCode}</td>
+            <td class="py-2.5 px-3 text-center">
+              <input type="checkbox" onchange="toggleMealPresent('${dateVal}', '${s.id}', this.checked)" ${m.present ? 'checked' : ''} class="w-4 h-4 text-emerald-600 rounded">
+            </td>
+            <td class="py-2.5 px-3 text-center">
+              <div class="inline-flex items-center gap-3">
+                ${showB ? `
+                  <label class="inline-flex items-center gap-1 cursor-pointer">
+                    <input type="checkbox" onchange="toggleMealDetail('${dateVal}', '${s.id}', 'b', this.checked)" ${m.b ? 'checked' : ''} class="text-amber-500 rounded">
+                    <span class="text-[11px] font-bold ${m.b ? 'text-amber-700' : 'text-rose-600'}">${m.b ? 'S (+)' : 'S (P)'}</span>
+                  </label>
+                ` : ''}
+                ${showL ? `
+                  <label class="inline-flex items-center gap-1 cursor-pointer">
+                    <input type="checkbox" onchange="toggleMealDetail('${dateVal}', '${s.id}', 'l', this.checked)" ${m.l ? 'checked' : ''} class="text-emerald-500 rounded">
+                    <span class="text-[11px] font-bold ${m.l ? 'text-emerald-700' : 'text-rose-600'}">${m.l ? 'T (+)' : 'T (P)'}</span>
+                  </label>
+                ` : ''}
+                ${showD ? `
+                  <label class="inline-flex items-center gap-1 cursor-pointer">
+                    <input type="checkbox" onchange="toggleMealDetail('${dateVal}', '${s.id}', 'd', this.checked)" ${m.d ? 'checked' : ''} class="text-blue-500 rounded">
+                    <span class="text-[11px] font-bold ${m.d ? 'text-blue-700' : 'text-rose-600'}">${m.d ? 'C (+)' : 'C (P)'}</span>
+                  </label>
+                ` : ''}
+              </div>
+            </td>
+            <td class="py-2.5 px-3 text-center font-bold font-mono ${totalStudentMeals === 3 ? 'text-emerald-700' : 'text-rose-600'}">
+              ${totalStudentMeals}/3 bữa
+            </td>
+            <td class="py-2.5 px-3">
+              <input type="text" value="${m.note || ''}" onchange="updateMealNote('${dateVal}', '${s.id}', this.value)" placeholder="Ghi chú..." class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs outline-none">
+            </td>
+            <td class="py-2.5 px-3 text-center bg-blue-50/50">
+              <button onclick="openEditStudentModal('${s.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-bold shadow-sm inline-flex items-center gap-1 transition">
+                <i class="fa-solid fa-pen-to-square"></i> Sửa HS
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      renderAbsenceOverviewTable();
+    }
+
+    function renderAbsenceOverviewTable() {
+      const dateVal = document.getElementById('attendance-date')?.value || new Date().toISOString().split('T')[0];
+      ensureMealRecord(dateVal);
+
+      const labelEl = document.getElementById('absence-summary-date-label');
+      if (labelEl) labelEl.textContent = formatDate(dateVal);
+
+      const dayMeals = state.dailyMeals[dateVal] || {};
+      const absentList = [];
+
+      state.students.forEach(s => {
+        const m = dayMeals[s.id] || { present: true, b: true, l: true, d: true, note: '' };
+        if (!m.present || !m.b || !m.l || !m.d) {
+          absentList.push({ student: s, meal: m });
+        }
+      });
+
+      const badgeEl = document.getElementById('badge-total-absent');
+      if (badgeEl) badgeEl.textContent = `${absentList.length} em`;
+
+      const tbody = document.getElementById('absence-overview-tbody');
+      if (!tbody) return;
+
+      if (absentList.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" class="py-6 text-center text-emerald-700 bg-emerald-50/30">
+              <div class="flex items-center justify-center gap-2 font-bold text-xs">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                <span>Tất cả học sinh hôm nay đều ăn đủ 3 bữa (+). Không có em nào báo vắng!</span>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = absentList.map((item, idx) => {
+        const s = item.student;
+        const m = item.meal;
+        const roomObj = DORM_ROOMS.find(r => r.id === s.room);
+        const roomName = roomObj ? `${roomObj.name} (Tầng ${roomObj.floor})` : s.room;
+
+        return `
+          <tr class="hover:bg-rose-50/40 transition border-b border-slate-100">
+            <td class="py-2.5 px-2.5 text-center text-rose-700 font-mono font-bold">${idx + 1}</td>
+            <td class="py-2.5 px-4 font-bold text-slate-900">${s.name}</td>
+            <td class="py-2.5 px-3 text-center font-bold text-blue-700">${s.className}</td>
+            <td class="py-2.5 px-3 text-center font-bold text-purple-700 font-mono">${roomName}</td>
+            <td class="py-2.5 px-3 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${m.present ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                ${m.present ? 'Có mặt' : 'Vắng KTX'}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-center">
+              <span class="px-2 py-0.5 rounded font-mono font-bold text-xs ${!m.b ? 'bg-rose-600 text-white' : 'text-slate-400'}">
+                ${!m.b ? 'P (Vắng)' : '+'}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-center">
+              <span class="px-2 py-0.5 rounded font-mono font-bold text-xs ${!m.l ? 'bg-rose-600 text-white' : 'text-slate-400'}">
+                ${!m.l ? 'P (Vắng)' : '+'}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-center">
+              <span class="px-2 py-0.5 rounded font-mono font-bold text-xs ${!m.d ? 'bg-rose-600 text-white' : 'text-slate-400'}">
+                ${!m.d ? 'P (Vắng)' : '+'}
+              </span>
+            </td>
+            <td class="py-2.5 px-4 text-slate-700 italic">${m.note || '<span class="text-slate-400">Chưa ghi chú</span>'}</td>
+            <td class="py-2.5 px-3 text-center bg-slate-50">
+              <div class="inline-flex items-center gap-1.5">
+                <button onclick="restoreStudentToPresent('${dateVal}', '${s.id}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold shadow-sm transition" title="Khôi phục ăn đủ 3 bữa (+)">
+                  <i class="fa-solid fa-rotate-left mr-0.5"></i> Ăn đủ
+                </button>
+                <button onclick="openEditStudentModal('${s.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-bold shadow-sm transition" title="Sửa thông tin học sinh">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* Các tác vụ bật tắt và khôi phục điểm danh */
+    function toggleMealPresent(dateStr, studentId, isChecked) {
+      if (!state.dailyMeals[dateStr]) ensureMealRecord(dateStr);
+      const m = state.dailyMeals[dateStr][studentId];
+      m.present = isChecked;
+      m.b = isChecked;
+      m.l = isChecked;
+      m.d = isChecked;
+      saveAllToStorage(dateStr);
+      renderAttendanceTable();
+    }
+
+    function toggleMealDetail(dateStr, studentId, mealKey, isChecked) {
+      if (!state.dailyMeals[dateStr]) ensureMealRecord(dateStr);
+      state.dailyMeals[dateStr][studentId][mealKey] = isChecked;
+      saveAllToStorage(dateStr);
+      renderAttendanceTable();
+    }
+
+    function updateMealNote(dateStr, studentId, noteVal) {
+      if (!state.dailyMeals[dateStr]) ensureMealRecord(dateStr);
+      state.dailyMeals[dateStr][studentId].note = noteVal;
+      saveAllToStorage(dateStr);
+      renderAbsenceOverviewTable();
+    }
+
+    function restoreStudentToPresent(dateStr, studentId) {
+      ensureMealRecord(dateStr);
+      state.dailyMeals[dateStr][studentId] = {
+        present: true,
+        b: true,
+        l: true,
+        d: true,
+        note: ''
+      };
+      saveAllToStorage(dateStr);
+      renderAttendanceTable();
+      showToast("Đã khôi phục học sinh ăn đủ 3 bữa (+)!");
+    }
+
+    function resetAllToPresentToday() {
+      const dateVal = document.getElementById('attendance-date')?.value || new Date().toISOString().split('T')[0];
+      ensureMealRecord(dateVal);
+      state.students.forEach(s => {
+        state.dailyMeals[dateVal][s.id] = {
+          present: true,
+          b: true,
+          l: true,
+          d: true,
+          note: ''
+        };
+      });
+      saveAllToStorage(dateVal);
+      renderAttendanceTable();
+      showToast("Tất cả học sinh hôm nay đã được thiết lập ăn đủ 3 bữa (+)!");
+    }
+
+    function openRoomSelectorForAttendance() {
+      openRoomAttendanceModal(DORM_ROOMS[0]?.id || 'P.1.2-Nam');
+    }
+
+    function openRoomAttendanceModal(roomId) {
+      const roomSelect = document.getElementById('room-att-select');
+      if (roomSelect) {
+        roomSelect.innerHTML = DORM_ROOMS.map(r => 
+          `<option value="${r.id}" ${r.id === roomId ? 'selected' : ''}>${r.name} - Tầng ${r.floor} (Khu ${r.block})</option>`
+        ).join('');
+      }
+
+      const curDate = document.getElementById('attendance-date')?.value || new Date().toISOString().split('T')[0];
+      document.getElementById('room-att-date').value = curDate;
+
+      renderRoomAttendanceMembers();
+
+      // Bắt đầu cập nhật đồng hồ hiển thị sau 21h30
+      updateRoomClock();
+      if (roomClockTimer) clearInterval(roomClockTimer);
+      roomClockTimer = setInterval(updateRoomClock, 1000);
+
+      document.getElementById('room-attendance-modal').classList.remove('hidden');
+      document.getElementById('room-attendance-modal').classList.add('flex');
+    }
+
+    function closeRoomAttendanceModal() {
+      if (roomClockTimer) {
+        clearInterval(roomClockTimer);
+        roomClockTimer = null;
+      }
+      document.getElementById('room-attendance-modal').classList.add('hidden');
+      document.getElementById('room-attendance-modal').classList.remove('flex');
+    }
+
+    function renderRoomAttendanceMembers() {
+      const roomId = document.getElementById('room-att-select')?.value;
+      const dateVal = document.getElementById('room-att-date')?.value || new Date().toISOString().split('T')[0];
+      ensureMealRecord(dateVal);
+
+      const room = DORM_ROOMS.find(r => r.id === roomId);
+      if (room) {
+        document.getElementById('room-att-title').textContent = `Kiểm Diện Đêm (Sau 21h30) - ${room.name} - Ngày ${formatDate(dateVal)}`;
+      }
+
+      const members = state.students.filter(s => s.room === roomId);
+      const tbody = document.getElementById('room-att-tbody');
+
+      if (members.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 italic">Phòng này hiện tại chưa có học sinh lưu trú</td></tr>`;
+        return;
+      }
+
+      const dayMeals = state.dailyMeals[dateVal] || {};
+
+      tbody.innerHTML = members.map((s, idx) => {
+        const m = dayMeals[s.id] || { present: true, b: true, l: true, d: true, note: '' };
+
+        return `
+          <tr class="hover:bg-indigo-50/40 transition border-b border-slate-100" data-student-id="${s.id}">
+            <td class="py-2.5 px-3 text-center text-slate-400 font-mono font-bold">${idx + 1}</td>
+            <td class="py-2.5 px-4 font-bold text-slate-900">${s.name}</td>
+            <td class="py-2.5 px-2 text-center font-bold text-blue-700">${s.className}</td>
+            <td class="py-2.5 px-3 text-center">
+              <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" class="room-att-present w-4 h-4 text-indigo-600 rounded" ${m.present ? 'checked' : ''} onchange="handleRoomAttPresentChange(this)">
+                <span class="text-xs font-bold ${m.present ? 'text-emerald-700' : 'text-rose-600'} room-att-status-text">
+                  ${m.present ? 'Có mặt trong phòng' : 'Vắng mặt'}
+                </span>
+              </label>
+            </td>
+            <td class="py-2.5 px-3">
+              <select class="room-att-reason px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs outline-none font-medium w-full">
+                <option value="Đang ở phòng" ${m.present ? 'selected' : ''}>Đang ở phòng ngủ</option>
+                <option value="Về nhà (Có phép)" ${m.note?.includes('Về nhà') ? 'selected' : ''}>Về nhà (Có phép)</option>
+                <option value="Nghỉ phòng y tế" ${m.note?.includes('y tế') || m.note?.includes('ốm') ? 'selected' : ''}>Nghỉ phòng y tế</option>
+                <option value="Ở phòng khác / Trễ giờ" ${m.note?.includes('khác') || m.note?.includes('trễ') ? 'selected' : ''}>Ở phòng khác / Trễ giờ</option>
+                <option value="Vắng không rõ lý do" ${!m.present && !m.note ? 'selected' : ''}>Vắng không rõ lý do</option>
+              </select>
+            </td>
+            <td class="py-2.5 px-3">
+              <input type="text" class="room-att-note w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs outline-none" value="${m.note || ''}" placeholder="Ghi chú chi tiết nếu có...">
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function handleRoomAttPresentChange(checkbox) {
+      const row = checkbox.closest('tr');
+      const isChecked = checkbox.checked;
+      const statusText = row.querySelector('.room-att-status-text');
+      const reasonSelect = row.querySelector('.room-att-reason');
+
+      if (statusText) {
+        statusText.textContent = isChecked ? 'Có mặt trong phòng' : 'Vắng mặt';
+        statusText.className = `text-xs font-bold ${isChecked ? 'text-emerald-700' : 'text-rose-600'} room-att-status-text`;
+      }
+      if (reasonSelect) {
+        reasonSelect.value = isChecked ? 'Đang ở phòng' : 'Về nhà (Có phép)';
+      }
+    }
+
+    function setAllRoomPresentNight() {
+      const tbody = document.getElementById('room-att-tbody');
+      tbody.querySelectorAll('tr').forEach(row => {
+        const cb = row.querySelector('.room-att-present');
+        if (cb) {
+          cb.checked = true;
+          handleRoomAttPresentChange(cb);
+        }
+        const note = row.querySelector('.room-att-note');
+        if (note) note.value = '';
+      });
+      showToast("Đã chọn cả phòng có mặt ngủ đủ!");
+    }
+
+    function setAllRoomAbsentNight() {
+      const tbody = document.getElementById('room-att-tbody');
+      tbody.querySelectorAll('tr').forEach(row => {
+        const cb = row.querySelector('.room-att-present');
+        if (cb) {
+          cb.checked = false;
+          handleRoomAttPresentChange(cb);
+        }
+        const reason = row.querySelector('.room-att-reason');
+        if (reason) reason.value = 'Về nhà (Có phép)';
+      });
+      showToast("Đã đánh dấu cả phòng vắng mặt sau 21h30!");
+    }
+
+    function saveRoomAttendance() {
+      const dateVal = document.getElementById('room-att-date')?.value || new Date().toISOString().split('T')[0];
+      ensureMealRecord(dateVal);
+
+      const tbody = document.getElementById('room-att-tbody');
+      const rows = tbody.querySelectorAll('tr[data-student-id]');
+
+      rows.forEach(row => {
+        const studentId = row.getAttribute('data-student-id');
+        const isPresent = row.querySelector('.room-att-present')?.checked ?? true;
+        const reason = row.querySelector('.room-att-reason')?.value || '';
+        const customNote = row.querySelector('.room-att-note')?.value?.trim() || '';
+
+        const noteText = isPresent ? (customNote || '') : (customNote ? `${reason} - ${customNote}` : reason);
+
+        // Cập nhật trạng thái có mặt đêm tại KTX
+        if (!state.dailyMeals[dateVal][studentId]) {
+          state.dailyMeals[dateVal][studentId] = { present: true, b: true, l: true, d: true, note: '' };
+        }
+        state.dailyMeals[dateVal][studentId].present = isPresent;
+        if (!isPresent) {
+          state.dailyMeals[dateVal][studentId].note = noteText;
+        } else if (customNote) {
+          state.dailyMeals[dateVal][studentId].note = customNote;
+        }
+
+        // Cập nhật vào trạng thái hồ sơ học sinh
+        const studentObj = state.students.find(x => x.id === studentId);
+        if (studentObj) {
+          studentObj.status = isPresent ? 'Đang ở KTX' : (reason.includes('y tế') ? 'Nghỉ ốm' : 'Về nhà');
+        }
+      });
+
+      saveAllToStorage();
+      closeRoomAttendanceModal();
+
+      renderAttendanceTable();
+      renderDormRooms();
+      renderDailySummary();
+      showToast("Đã lưu kiểm diện KTX sau 21h30 thành công!");
+    }
+
+    function openExcelImportModal() {
+      tempImportedStudents = [];
+      const uploader = document.getElementById('excel-file-uploader');
+      if (uploader) uploader.value = '';
+      document.getElementById('excel-import-preview-box')?.classList.add('hidden');
+      const btnConfirm = document.getElementById('btn-confirm-import-excel');
+      if (btnConfirm) btnConfirm.disabled = true;
+
+      document.getElementById('excel-import-modal').classList.remove('hidden');
+      document.getElementById('excel-import-modal').classList.add('flex');
+    }
+
+    function closeExcelImportModal() {
+      document.getElementById('excel-import-modal').classList.add('hidden');
+      document.getElementById('excel-import-modal').classList.remove('flex');
+    }
+
+    function handleExcelFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const fileName = file.name;
+      document.getElementById('excel-file-name').textContent = `Tệp: ${fileName}`;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+          if (!rows || rows.length < 2) {
+            showToast("Tệp Excel không chứa dữ liệu hợp lệ!", "error");
+            return;
+          }
+
+          // Phân tích các hàng
+          tempImportedStudents = parseExcelRowsToStudents(rows);
+
+          if (tempImportedStudents.length === 0) {
+            showToast("Không tìm thấy dữ liệu học sinh trong tệp Excel!", "error");
+            return;
+          }
+
+          // Hiển thị tóm tắt
+          document.getElementById('excel-parsed-summary').textContent = `Đã phân tích thành công ${tempImportedStudents.length} học sinh`;
+          document.getElementById('excel-total-count').textContent = `${tempImportedStudents.length} em`;
+
+          // Thống kê theo lớp
+          const classCounts = {};
+          tempImportedStudents.forEach(s => {
+            classCounts[s.className] = (classCounts[s.className] || 0) + 1;
+          });
+
+          const classBreakdownEl = document.getElementById('excel-class-breakdown');
+          classBreakdownEl.innerHTML = Object.keys(classCounts).map(cls => 
+            `<span class="px-2 py-1 bg-white rounded-lg border border-slate-200 font-mono font-bold text-slate-700">${cls}: <strong class="text-blue-700">${classCounts[cls]}</strong></span>`
+          ).join('');
+
+          document.getElementById('excel-import-preview-box')?.classList.remove('hidden');
+          document.getElementById('btn-confirm-import-excel').disabled = false;
+        } catch (err) {
+          console.error("Lỗi đọc file Excel:", err);
+          showToast("Lỗi khi đọc file Excel, vui lòng kiểm tra lại định dạng tệp!", "error");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function parseExcelRowsToStudents(rows) {
+      const results = [];
+      let headerRowIdx = -1;
+      let colName = -1, colClass = -1, colDob = -1, colGender = -1, colEthnic = -1, colRoom = -1, colPhone = -1;
+
+      // Tìm hàng tiêu đề chứa các từ khóa
+      for (let r = 0; r < Math.min(rows.length, 15); r++) {
+        const row = rows[r];
+        for (let c = 0; c < row.length; c++) {
+          const val = String(row[c]).toLowerCase().trim();
+          if (val.includes('họ') && val.includes('tên')) colName = c;
+          if (val.includes('lớp')) colClass = c;
+          if (val.includes('ngày sinh') || val === 'ns' || val.includes('sinh')) colDob = c;
+          if (val.includes('giới tính') || val === 'gt' || val === 'nam/nữ') colGender = c;
+          if (val.includes('dân tộc')) colEthnic = c;
+          if (val.includes('phòng') || val.includes('ktx')) colRoom = c;
+          if (val.includes('sđt') || val.includes('điện thoại')) colPhone = c;
+        }
+        if (colName !== -1) {
+          headerRowIdx = r;
+          break;
+        }
+      }
+
+      // Nếu không tìm thấy hàng tiêu đề rõ ràng, gán cột mặc định theo mẫu chuẩn
+      if (headerRowIdx === -1) {
+        headerRowIdx = 0;
+        colClass = 1;
+        colName = 2;
+        colDob = 3;
+        colGender = 4;
+        colEthnic = 5;
+      }
+
+      // Phân bổ phòng mặc định theo giới tính nếu file chưa có phòng
+      let maleRoomIdx = 0;
+      let femaleRoomIdx = 0;
+      const maleRooms = DORM_ROOMS.filter(r => r.block === 'Nam');
+      const femaleRooms = DORM_ROOMS.filter(r => r.block === 'Nữ');
+
+      for (let r = headerRowIdx + 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row || row.length === 0) continue;
+
+        let name = colName !== -1 ? String(row[colName] || '').trim() : '';
+        if (!name || name.toLowerCase().includes('họ và tên') || name.toLowerCase().includes('tổng cộng')) continue;
+
+        // Trích xuất Lớp
+        let className = '6A';
+        if (colClass !== -1 && row[colClass]) {
+          const rawClass = String(row[colClass]).toUpperCase().replace(/[^0-9A-Z]/g, '');
+          const matched = Object.keys(TEACHERS_MAP).find(c => rawClass.includes(c));
+          if (matched) className = matched;
+        }
+
+        // Trích xuất Giới tính
+        let gender = 'Nam';
+        if (colGender !== -1 && row[colGender]) {
+          const rawG = String(row[colGender]).toLowerCase();
+          if (rawG.includes('nữ') || rawG === 'f' || rawG === 'nu') gender = 'Nữ';
+        }
+
+        // Trích xuất Ngày sinh
+        let dob = '2014-01-01';
+        if (colDob !== -1 && row[colDob]) {
+          const rawDob = String(row[colDob]).trim();
+          if (rawDob.includes('/')) {
+            const parts = rawDob.split('/');
+            if (parts.length === 3) {
+              const d = parts[0].padStart(2, '0');
+              const m = parts[1].padStart(2, '0');
+              const y = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
+              dob = `${y}-${m}-${d}`;
+            }
+          } else if (rawDob.includes('-')) {
+            dob = rawDob;
+          }
+        }
+
+        // Trích xuất Dân tộc
+        let ethnic = 'Mông';
+        if (colEthnic !== -1 && row[colEthnic]) {
+          ethnic = String(row[colEthnic]).trim() || 'Mông';
+        }
+
+        // Trích xuất Phòng KTX
+        let room = '';
+        if (colRoom !== -1 && row[colRoom]) {
+          const rawRoom = String(row[colRoom]).trim();
+          const found = DORM_ROOMS.find(r => r.id === rawRoom || r.code === rawRoom || r.name.includes(rawRoom));
+          if (found) room = found.id;
+        }
+
+        if (!room) {
+          if (gender === 'Nam') {
+            room = maleRooms[maleRoomIdx % maleRooms.length].id;
+            maleRoomIdx++;
+          } else {
+            room = femaleRooms[femaleRoomIdx % femaleRooms.length].id;
+            femaleRoomIdx++;
+          }
+        }
+
+        const phone = colPhone !== -1 ? String(row[colPhone] || '').trim() : '';
+        const id = `SMC-${className}-${(r + 1).toString().padStart(3, '0')}`;
+
+        results.push({
+          id: id,
+          name: name,
+          className: className,
+          dob: dob,
+          gender: gender,
+          ethnic: ethnic,
+          room: room,
+          status: 'Đang ở KTX',
+          phone: phone
+        });
+      }
+
+      return results;
+    }
+
+    function applyExcelImport() {
+      if (!tempImportedStudents || tempImportedStudents.length === 0) {
+        showToast("Không có dữ liệu học sinh để nhập!", "error");
+        return;
+      }
+
+      const mode = document.querySelector('input[name="excel-import-mode"]:checked')?.value || 'replace';
+
+      if (mode === 'replace') {
+        state.students = tempImportedStudents;
+      } else {
+        // Bổ sung: kiểm tra trùng mã hoặc thêm mới
+        tempImportedStudents.forEach(newS => {
+          const existingIdx = state.students.findIndex(x => x.name === newS.name && x.className === newS.className);
+          if (existingIdx !== -1) {
+            state.students[existingIdx] = newS;
+          } else {
+            state.students.push(newS);
+          }
+        });
+      }
+
+      saveAllToStorage();
+      closeExcelImportModal();
+
+      renderStudentsTable();
+      renderAttendanceTable();
+      renderDormRooms();
+      renderClassesList();
+      renderDailySummary();
+      renderSettlementTable();
+
+      showToast(`Đã nạp thành công ${tempImportedStudents.length} học sinh toàn trường vào App!`);
+    }
+
+    function downloadSampleExcel() {
+      const wsData = [
+        ['STT', 'Lớp học', 'Họ và tên', 'Ngày sinh', 'Giới tính', 'Dân tộc', 'Phòng KTX', 'SĐT Phụ huynh'],
+        [1, '6A', 'Sùng Thị Thu Băng', '15/03/2014', 'Nữ', 'Mông', 'Phòng 1.9', '0981123456'],
+        [2, '6A', 'Thào A Dơ', '10/09/2014', 'Nam', 'Mông', 'Phòng 1.2', '0983345678'],
+        [3, '6B', 'Cư Seo Pao', '12/04/2014', 'Nam', 'Mông', 'Phòng 1.3', '0985567890'],
+        [4, '7A', 'Vàng Thị Dế', '18/05/2013', 'Nữ', 'Mông', 'Phòng 1.11', '0987789012'],
+        [5, '10A', 'Lồ Thị Mai', '15/01/2010', 'Nữ', 'Mông', 'Phòng 2.9', '0913456789']
+      ];
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Mau_Hoc_Sinh_SMC');
+      XLSX.writeFile(wb, 'Mau_Danh_Sach_Hoc_Sinh_SiMaCai.xlsx');
+      showToast("Đã tải tệp Excel mẫu về máy!");
+    }
+
+    function closeRoomAttendanceModal() {
+      document.getElementById('room-attendance-modal').classList.add('hidden');
+      document.getElementById('room-attendance-modal').classList.remove('flex');
+    }
+
+    function renderRoomAttendanceMembers() {
+      const roomId = document.getElementById('room-att-select')?.value;
+      const dateVal = document.getElementById('room-att-date')?.value || new Date().toISOString().split('T')[0];
+      ensureMealRecord(dateVal);
+
+      const room = DORM_ROOMS.find(r => r.id === roomId);
+      if (room) {
+        document.getElementById('room-att-title').textContent = `Điểm Danh ${room.name} - Ngày ${formatDate(dateVal)}`;
+      }
+
+      const members = state.students.filter(s => s.room === roomId);
+      const tbody = document.getElementById('room-att-tbody');
+
+      if (members.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400 italic">Phòng này hiện tại chưa có học sinh lưu trú</td></tr>`;
+        return;
+      }
+
+      const dayMeals = state.dailyMeals[dateVal] || {};
+
+      tbody.innerHTML = members.map((s, idx) => {
+        const m = dayMeals[s.id] || { present: true, b: true, l: true, d: true, note: '' };
+
+        return `
+          <tr class="hover:bg-purple-50/40 transition border-b border-slate-100" data-student-id="${s.id}">
+            <td class="py-2.5 px-3 text-center text-slate-400 font-mono font-bold">${idx + 1}</td>
+            <td class="py-2.5 px-4 font-bold text-slate-900">${s.name}</td>
+            <td class="py-2.5 px-2 text-center font-bold text-blue-700">${s.className}</td>
+            <td class="py-2.5 px-3 text-center">
+              <label class="inline-flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" class="room-att-present w-4 h-4 text-purple-600 rounded" ${m.present ? 'checked' : ''} onchange="handleRoomAttPresentChange(this, '${s.id}')">
+                <span class="text-[11px] font-semibold text-slate-700">Có mặt</span>
+              </label>
+            </td>
+            <td class="py-2.5 px-3 text-center">
+              <div class="inline-flex items-center gap-3">
+                <label class="inline-flex items-center gap-1 cursor-pointer">
+                  <input type="checkbox" class="room-att-b text-amber-500 rounded" ${m.b ? 'checked' : ''}>
+                  <span class="text-[11px] font-bold text-amber-800">Sáng</span>
+                </label>
+                <label class="inline-flex items-center gap-1 cursor-pointer">
+                  <input type="checkbox" class="room-att-l text-emerald-500 rounded" ${m.l ? 'checked' : ''}>
+                  <span class="text-[11px] font-bold text-emerald-800">Trưa</span>
+                </label>
+                <label class="inline-flex items-center gap-1 cursor-pointer">
+                  <input type="checkbox" class="room-att-d text-blue-500 rounded" ${m.d ? 'checked' : ''}>
+                  <span class="text-[11px] font-bold text-blue-800">Chiều</span>
+                </label>
+              </div>
+            </td>
+            <td class="py-2.5 px-3">
+              <input type="text" class="room-att-note w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs outline-none" value="${m.note || ''}" placeholder="Lý do vắng nếu có...">
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function handleRoomAttPresentChange(checkbox, studentId) {
+      const row = checkbox.closest('tr');
+      const isChecked = checkbox.checked;
+      row.querySelector('.room-att-b').checked = isChecked;
+      row.querySelector('.room-att-l').checked = isChecked;
+      row.querySelector('.room-att-d').checked = isChecked;
+    }
+
+    function setAllRoomPresent() {
+      const tbody = document.getElementById('room-att-tbody');
+      tbody.querySelectorAll('tr').forEach(row => {
+        const cbPresent = row.querySelector('.room-att-present');
+        const cbB = row.querySelector('.room-att-b');
+        const cbL = row.querySelector('.room-att-l');
+        const cbD = row.querySelector('.room-att-d');
+        if (cbPresent) cbPresent.checked = true;
+        if (cbB) cbB.checked = true;
+        if (cbL) cbL.checked = true;
+        if (cbD) cbD.checked = true;
+      });
+      showToast("Đã chọn cả phòng ăn đủ 3 bữa (+)");
+    }
+
+    function setAllRoomAbsentAllDay() {
+      const tbody = document.getElementById('room-att-tbody');
+      tbody.querySelectorAll('tr').forEach(row => {
+        const cbPresent = row.querySelector('.room-att-present');
+        const cbB = row.querySelector('.room-att-b');
+        const cbL = row.querySelector('.room-att-l');
+        const cbD = row.querySelector('.room-att-d');
+        const txtNote = row.querySelector('.room-att-note');
+        if (cbPresent) cbPresent.checked = false;
+        if (cbB) cbB.checked = false;
+        if (cbL) cbL.checked = false;
+        if (cbD) cbD.checked = false;
+        if (txtNote && !txtNote.value) txtNote.value = 'Về nhà cuối tuần';
+      });
+      showToast("Đã báo cả phòng vắng (P)");
+    }
+
+    function saveRoomAttendance() {
+      const dateVal = document.getElementById('room-att-date')?.value || new Date().toISOString().split('T')[0];
+      ensureMealRecord(dateVal);
+
+      const tbody = document.getElementById('room-att-tbody');
+      const rows = tbody.querySelectorAll('tr[data-student-id]');
+
+      rows.forEach(row => {
+        const studentId = row.getAttribute('data-student-id');
+        const isPresent = row.querySelector('.room-att-present')?.checked ?? true;
+        const b = row.querySelector('.room-att-b')?.checked ?? true;
+        const l = row.querySelector('.room-att-l')?.checked ?? true;
+        const d = row.querySelector('.room-att-d')?.checked ?? true;
+        const note = row.querySelector('.room-att-note')?.value?.trim() || '';
+
+        state.dailyMeals[dateVal][studentId] = {
+          present: isPresent,
+          b: b,
+          l: l,
+          d: d,
+          note: note
+        };
+      });
+
+      saveAllToStorage();
+      closeRoomAttendanceModal();
+
+      const mainAttDateInput = document.getElementById('attendance-date');
+      if (mainAttDateInput) mainAttDateInput.value = dateVal;
+
+      renderAttendanceTable();
+      showToast("Đã lưu điểm danh phòng! Dữ liệu đã đồng bộ toàn hệ thống.");
+    }
+
+    function openQuickAbsenceModal() {
+      const curDate = document.getElementById('attendance-date')?.value || new Date().toISOString().split('T')[0];
+      document.getElementById('qa-date').value = curDate;
+
+      const studentSelect = document.getElementById('qa-student');
+      if (studentSelect) {
+        studentSelect.innerHTML = state.students.map(s => {
+          const roomObj = DORM_ROOMS.find(r => r.id === s.room);
+          const roomCode = roomObj ? roomObj.code : s.room;
+          return `<option value="${s.id}">${s.name} - Lớp ${s.className} (Phòng ${roomCode})</option>`;
+        }).join('');
+      }
+
+      document.getElementById('qa-absent-b').checked = false;
+      document.getElementById('qa-absent-l').checked = false;
+      document.getElementById('qa-absent-d').checked = false;
+      document.getElementById('qa-absent-dorm').checked = false;
+      document.getElementById('qa-reason').value = '';
+
+      document.getElementById('quick-absence-modal').classList.remove('hidden');
+      document.getElementById('quick-absence-modal').classList.add('flex');
+    }
+
+    function closeQuickAbsenceModal() {
+      document.getElementById('quick-absence-modal').classList.add('hidden');
+      document.getElementById('quick-absence-modal').classList.remove('flex');
+    }
+
+    function toggleQaAllDay(isChecked) {
+      if (isChecked) {
+        document.getElementById('qa-absent-b').checked = true;
+        document.getElementById('qa-absent-l').checked = true;
+        document.getElementById('qa-absent-d').checked = true;
+      }
+    }
+
+    function handleSaveQuickAbsence(e) {
+      e.preventDefault();
+      const dateVal = document.getElementById('qa-date').value;
+      const studentId = document.getElementById('qa-student').value;
+      const absentB = document.getElementById('qa-absent-b').checked;
+      const absentL = document.getElementById('qa-absent-l').checked;
+      const absentD = document.getElementById('qa-absent-d').checked;
+      const absentDorm = document.getElementById('qa-absent-dorm').checked;
+      const reason = document.getElementById('qa-reason').value.trim() || 'Vắng có phép';
+
+      if (!absentB && !absentL && !absentD && !absentDorm) {
+        showToast("Vui lòng chọn ít nhất 1 bữa báo vắng!", "error");
+        return;
+      }
+
+      ensureMealRecord(dateVal);
+
+      state.dailyMeals[dateVal][studentId] = {
+        present: !absentDorm,
+        b: !absentB,
+        l: !absentL,
+        d: !absentD,
+        note: reason
+      };
+
+      saveAllToStorage();
+      closeQuickAbsenceModal();
+
+      const mainAttDateInput = document.getElementById('attendance-date');
+      if (mainAttDateInput) mainAttDateInput.value = dateVal;
+
+      renderAttendanceTable();
+      const s = state.students.find(x => x.id === studentId);
+      showToast(`Đã báo vắng (điền P) thành công cho em ${s?.name || ''}!`);
+    }
+
+    /* =========================================================
+       TAB 2: BÁO CÁO TỔNG HỢP NGÀY (QUẢN LÝ)
+       ========================================================= */
+    function setDailySummaryToday() {
+      const today = new Date().toISOString().split('T')[0];
+      const input = document.getElementById('daily-summary-date');
+      if (input) input.value = today;
+      renderDailySummary();
+    }
+
+    function changeDailySummaryDay(delta) {
+      const input = document.getElementById('daily-summary-date');
+      const cur = new Date(input.value || new Date());
+      cur.setDate(cur.getDate() + delta);
+      input.value = cur.toISOString().split('T')[0];
+      renderDailySummary();
+    }
+
+    function renderDailySummary() {
+      const dateInput = document.getElementById('daily-summary-date');
+      if (!dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+      }
+      const curDate = dateInput.value;
+      ensureMealRecord(curDate);
+
+      const dayMeals = state.dailyMeals[curDate] || {};
+      const totalStudents = state.students.length;
+
+      let presentDormCount = 0;
+      let sumB = 0, sumL = 0, sumD = 0;
+
+      // Tính tổng theo từng lớp
+      const classStats = {};
+      Object.keys(TEACHERS_MAP).forEach(cls => {
+        classStats[cls] = { total: 0, presentDorm: 0, absentDorm: 0, b: 0, l: 0, d: 0 };
+      });
+
+      state.students.forEach(s => {
+        const m = dayMeals[s.id] || { present: true, b: true, l: true, d: true };
+        if (classStats[s.className]) {
+          classStats[s.className].total++;
+          if (m.present) {
+            classStats[s.className].presentDorm++;
+            presentDormCount++;
+          } else {
+            classStats[s.className].absentDorm++;
+          }
+          if (m.b) { classStats[s.className].b++; sumB++; }
+          if (m.l) { classStats[s.className].l++; sumL++; }
+          if (m.d) { classStats[s.className].d++; sumD++; }
+        }
+      });
+
+      const absentDormCount = totalStudents - presentDormCount;
+      const totalMeals = sumB + sumL + sumD;
+
+      // Cập nhật 5 thẻ KPI
+      document.getElementById('sum-kpi-total-students').textContent = totalStudents;
+      document.getElementById('sum-kpi-present-dorm').textContent = presentDormCount;
+      document.getElementById('sum-kpi-absent-dorm').textContent = absentDormCount;
+      document.getElementById('sum-kpi-total-meals').textContent = totalMeals;
+      document.getElementById('sum-kpi-meal-breakdown').textContent = `S: ${sumB} | T: ${sumL} | C: ${sumD}`;
+      const pct = totalStudents > 0 ? ((presentDormCount / totalStudents) * 100).toFixed(1) : 0;
+      document.getElementById('sum-kpi-present-pct').textContent = `${pct}% có mặt`;
+
+      const maleTotal = state.students.filter(s => s.gender === 'Nam').length;
+      const femaleTotal = state.students.filter(s => s.gender === 'Nữ').length;
+      const elGenderBreakdown = document.getElementById('sum-kpi-gender-breakdown');
+      if (elGenderBreakdown) {
+        elGenderBreakdown.textContent = `Nam: ${maleTotal} • Nữ: ${femaleTotal}`;
+      }
+
+      // Cập nhật bảng 15 Lớp
+      const tbody = document.getElementById('daily-summary-classes-tbody');
+      const tfoot = document.getElementById('daily-summary-classes-tfoot');
+
+      let idx = 1;
+      tbody.innerHTML = Object.keys(TEACHERS_MAP).map(cls => {
+        const info = TEACHERS_MAP[cls];
+        const stat = classStats[cls];
+        const classTotalMeals = stat.b + stat.l + stat.d;
+
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="py-2 px-3 text-center text-slate-400 font-mono font-bold">${idx++}</td>
+            <td class="py-2 px-3 text-center font-bold text-blue-700 font-mono">${cls}</td>
+            <td class="py-2 px-4 font-semibold text-slate-800">${info.teacher}</td>
+            <td class="py-2 px-3 text-center font-bold font-mono">${stat.total}</td>
+            <td class="py-2 px-3 text-center font-bold font-mono text-emerald-700">${stat.presentDorm}</td>
+            <td class="py-2 px-3 text-center font-bold font-mono ${stat.absentDorm > 0 ? 'text-rose-600' : 'text-slate-400'}">${stat.absentDorm}</td>
+            <td class="py-2 px-3 text-center font-mono font-bold text-amber-700 bg-amber-50/30">${stat.b}</td>
+            <td class="py-2 px-3 text-center font-mono font-bold text-emerald-700 bg-emerald-50/30">${stat.l}</td>
+            <td class="py-2 px-3 text-center font-mono font-bold text-blue-700 bg-blue-50/30">${stat.d}</td>
+            <td class="py-2 px-3 text-center font-mono font-black text-slate-900">${classTotalMeals}</td>
+          </tr>
+        `;
+      }).join('');
+
+      tfoot.innerHTML = `
+        <tr class="bg-slate-100 text-slate-900">
+          <td colspan="3" class="py-2.5 px-4 text-center font-bold uppercase">Tổng Cộng Toàn Trường:</td>
+          <td class="py-2.5 px-3 text-center font-black font-mono text-slate-900">${totalStudents}</td>
+          <td class="py-2.5 px-3 text-center font-black font-mono text-emerald-700">${presentDormCount}</td>
+          <td class="py-2.5 px-3 text-center font-black font-mono text-rose-600">${absentDormCount}</td>
+          <td class="py-2.5 px-3 text-center font-black font-mono text-amber-800 bg-amber-100/50">${sumB}</td>
+          <td class="py-2.5 px-3 text-center font-black font-mono text-emerald-800 bg-emerald-100/50">${sumL}</td>
+          <td class="py-2.5 px-3 text-center font-black font-mono text-blue-800 bg-blue-100/50">${sumD}</td>
+          <td class="py-2.5 px-3 text-center font-black font-mono text-emerald-900 text-sm">${totalMeals}</td>
+        </tr>
+      `;
+    }
+
+    /* =========================================================
+       TAB 3: BẢNG CHẤM CƠM THÁNG (CHUẨN MẪU BIỂU 100%)
+       ========================================================= */
+    function renderSettlementTable() {
+      const monthInput = document.getElementById('settlement-month')?.value || '2026-09';
+      const classVal = document.getElementById('settlement-class-filter')?.value || '6A';
+
+      const [yearStr, monthStr] = monthInput.split('-');
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10);
+
+      const daysInMonth = new Date(year, month, 0).getDate();
+
+      // Cập nhật tiêu đề bảng
+      const headingEl = document.getElementById('settlement-heading-info');
+      if (headingEl) {
+        headingEl.textContent = `Tháng ${month < 10 ? '0' + month : month} năm ${year} - Lớp ${classVal}`;
+      }
+
+      // Cập nhật tên GVCN và ngày ký
+      const gvcnObj = TEACHERS_MAP[classVal];
+      const gvcnSignEl = document.getElementById('settlement-sign-gvcn');
+      if (gvcnSignEl) {
+        gvcnSignEl.textContent = gvcnObj ? gvcnObj.teacher : '..............................';
+      }
+
+      const signDateEl = document.getElementById('settlement-sign-date');
+      if (signDateEl) {
+        signDateEl.textContent = `Si Ma Cai, ngày ..... tháng ${month < 10 ? '0' + month : month} năm ${year}`;
+      }
+
+      // Header các ngày 1 -> 31
+      const daysHeader = document.getElementById('settlement-days-header');
+      let headerDaysHtml = '';
+      for (let d = 1; d <= 31; d++) {
+        headerDaysHtml += `<th class="border border-slate-800 py-0.5 px-1 w-6 text-center ${d > daysInMonth ? 'bg-slate-200 text-slate-400' : ''}">${d}</th>`;
+      }
+      daysHeader.innerHTML = headerDaysHtml;
+
+      // Lọc danh sách học sinh của lớp
+      const studentsOfClass = state.students.filter(s => s.className === classVal);
+      const tbody = document.getElementById('settlement-table-tbody');
+      const tfoot = document.getElementById('settlement-table-tfoot');
+
+      if (studentsOfClass.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="36" class="p-8 text-center text-slate-400 italic">Chưa có học sinh nào trong ${classVal}</td></tr>`;
+        tfoot.innerHTML = '';
+        return;
+      }
+
+      // Mảng tính tổng số suất ăn theo từng ngày cho toàn lớp
+      const dailyTotals = Array(32).fill(0);
+      let grandTotalMonth = 0;
+
+      let rowsHtml = '';
+      studentsOfClass.forEach((s, idx) => {
+        const studentIndex = idx + 1;
+        const meals = ['Sáng', 'Trưa', 'Chiều'];
+        const mealKeys = ['b', 'l', 'd'];
+
+        let sumMeals = { b: 0, l: 0, d: 0 };
+
+        // 3 hàng cho 1 học sinh
+        meals.forEach((mealName, mIdx) => {
+          const mKey = mealKeys[mIdx];
+          let daysTdHtml = '';
+
+          for (let d = 1; d <= 31; d++) {
+            if (d <= daysInMonth) {
+              const dayStr = `${year}-${month < 10 ? '0' + month : month}-${d < 10 ? '0' + d : d}`;
+              const dayRecord = state.dailyMeals[dayStr]?.[s.id];
+              // Mặc định là ăn (+)
+              const isPresent = dayRecord ? dayRecord[mKey] : true;
+
+              if (isPresent) {
+                daysTdHtml += `<td class="border border-slate-800 text-center font-bold text-slate-800 p-0.5">+</td>`;
+                sumMeals[mKey]++;
+                dailyTotals[d]++;
+                grandTotalMonth++;
+              } else {
+                daysTdHtml += `<td class="border border-slate-800 text-center font-black text-rose-600 bg-rose-50 p-0.5">P</td>`;
+              }
+            } else {
+              daysTdHtml += `<td class="border border-slate-800 bg-slate-100 text-center p-0.5 text-slate-400">-</td>`;
+            }
+          }
+
+          if (mIdx === 0) {
+            // Hàng đầu tiên: hiển thị STT và Họ tên (gộp 3 dòng)
+            rowsHtml += `
+              <tr class="hover:bg-slate-50/50 border-t border-slate-800">
+                <td rowspan="3" class="border border-slate-800 text-center font-bold font-mono text-slate-700">${studentIndex}</td>
+                <td rowspan="3" class="border border-slate-800 px-2.5 font-bold text-slate-900">${s.name}</td>
+                <td class="border border-slate-800 text-center font-medium">${mealName}</td>
+                ${daysTdHtml}
+                <td class="border border-slate-800 text-center font-bold font-mono text-slate-800">${sumMeals[mKey]}</td>
+                <td rowspan="3" class="border border-slate-800 px-2 text-center text-slate-400 italic"></td>
+                <td rowspan="3" class="border border-slate-800 text-center no-print bg-blue-50/30">
+                  <button onclick="openEditStudentModal('${s.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-bold shadow-xs">Sửa</button>
+                </td>
+              </tr>
+            `;
+          } else {
+            rowsHtml += `
+              <tr class="hover:bg-slate-50/50">
+                <td class="border border-slate-800 text-center font-medium">${mealName}</td>
+                ${daysTdHtml}
+                <td class="border border-slate-800 text-center font-bold font-mono text-slate-800">${sumMeals[mKey]}</td>
+              </tr>
+            `;
+          }
+        });
+      });
+
+      tbody.innerHTML = rowsHtml;
+
+      // Hàng chân bảng "Cộng" tổng các ngày từ 1 -> 31
+      let footerDaysHtml = '';
+      for (let d = 1; d <= 31; d++) {
+        if (d <= daysInMonth) {
+          footerDaysHtml += `<td class="border border-slate-800 text-center font-bold font-mono p-0.5">${dailyTotals[d]}</td>`;
+        } else {
+          footerDaysHtml += `<td class="border border-slate-800 bg-slate-200 text-center p-0.5 text-slate-400">-</td>`;
+        }
+      }
+
+      tfoot.innerHTML = `
+        <tr class="bg-slate-100 font-bold text-slate-900">
+          <td colspan="3" class="border border-slate-800 py-1.5 px-3 text-center uppercase tracking-wide">Cộng</td>
+          ${footerDaysHtml}
+          <td class="border border-slate-800 py-1.5 text-center font-black font-mono text-emerald-900">${grandTotalMonth}</td>
+          <td class="border border-slate-800"></td>
+          <td class="border border-slate-800 no-print"></td>
+        </tr>
+      `;
+    }
+
+    function exportSettlementToExcel() {
+      const monthInput = document.getElementById('settlement-month')?.value || '2026-09';
+      const classVal = document.getElementById('settlement-class-filter')?.value || '6A';
+      const [yearStr, monthStr] = monthInput.split('-');
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10);
+      const daysInMonth = new Date(year, month, 0).getDate();
+
+      const studentsOfClass = state.students.filter(s => s.className === classVal);
+
+      // Tạo cấu trúc mảng cho Excel
+      const wsData = [
+        ['SỞ GIÁO DỤC VÀ ĐÀO TẠO LÀO CAI', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM'],
+        ['TRƯỜNG PTDTNT THCS VÀ THPT SI MA CAI', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Độc lập - Tự do - Hạnh phúc'],
+        [''],
+        ['BẢNG CHẤM CƠM'],
+        [`Lớp: ${classVal}           Tháng ${month < 10 ? '0' + month : month} năm ${year}`],
+        ['']
+      ];
+
+      // Dòng tiêu đề cột
+      const headerRow1 = ['STT', 'Họ và tên', 'Bữa ăn trong ngày'];
+      for (let d = 1; d <= 31; d++) headerRow1.push(d);
+      headerRow1.push('Cộng');
+      headerRow1.push('Ký xác nhận (Ký, ghi rõ họ và tên)');
+      wsData.push(headerRow1);
+
+      const dailyTotals = Array(32).fill(0);
+      let grandTotalMonth = 0;
+
+      studentsOfClass.forEach((s, idx) => {
+        const studentIndex = idx + 1;
+        const meals = ['Sáng', 'Trưa', 'Chiều'];
+        const mealKeys = ['b', 'l', 'd'];
+
+        meals.forEach((mealName, mIdx) => {
+          const mKey = mealKeys[mIdx];
+          const rowData = [];
+          if (mIdx === 0) {
+            rowData.push(studentIndex, s.name, mealName);
+          } else {
+            rowData.push('', '', mealName);
+          }
+
+          let sumM = 0;
+          for (let d = 1; d <= 31; d++) {
+            if (d <= daysInMonth) {
+              const dayStr = `${year}-${month < 10 ? '0' + month : month}-${d < 10 ? '0' + d : d}`;
+              const dayRecord = state.dailyMeals[dayStr]?.[s.id];
+              const isPresent = dayRecord ? dayRecord[mKey] : true;
+              if (isPresent) {
+                rowData.push('+');
+                sumM++;
+                dailyTotals[d]++;
+                grandTotalMonth++;
+              } else {
+                rowData.push('P');
+              }
+            } else {
+              rowData.push('-');
+            }
+          }
+          rowData.push(sumM);
+          if (mIdx === 0) rowData.push('');
+          wsData.push(rowData);
+        });
+      });
+
+      // Hàng Cộng
+      const footRow = ['Cộng', '', ''];
+      for (let d = 1; d <= 31; d++) {
+        footRow.push(d <= daysInMonth ? dailyTotals[d] : '-');
+      }
+      footRow.push(grandTotalMonth, '');
+      wsData.push(footRow);
+
+      // Chữ ký
+      wsData.push(['']);
+      wsData.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', `Si Ma Cai, ngày ..... tháng ${month < 10 ? '0' + month : month} năm ${year}`]);
+      wsData.push(['Giáo viên chủ nhiệm', '', '', '', '', '', '', 'Quản lý nhà ăn', '', '', '', '', '', '', 'Kế toán', '', '', '', '', '', '', 'Hiệu trưởng']);
+      wsData.push(['(Ký, ghi rõ họ tên)', '', '', '', '', '', '', '(Ký, ghi rõ họ tên)', '', '', '', '', '', '', '(Ký, ghi rõ họ tên)', '', '', '', '', '', '', '(Ký, đóng dấu)']);
+      wsData.push(['']);
+      wsData.push(['']);
+      wsData.push([TEACHERS_MAP[classVal]?.teacher || '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']);
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, `ChamCom_${classVal}`);
+      XLSX.writeFile(wb, `BangChamCom_${classVal}_T${month}_${year}.xlsx`);
+      showToast(`Đã xuất Excel Bảng Chấm Cơm lớp ${classVal} thành công!`);
+    }
+
+    /* =========================================================
+       TAB 4: SƠ ĐỒ KÝ TÚC XÁ (57 PHÒNG)
+       ========================================================= */
+    function renderDormRooms() {
+      const grid = document.getElementById('dorm-grid');
+      const filterBlock = document.getElementById('dorm-filter-block')?.value || 'ALL';
+
+      const filtered = DORM_ROOMS.filter(r => filterBlock === 'ALL' || r.block === filterBlock);
+
+      grid.innerHTML = filtered.map(r => {
+        const members = state.students.filter(s => s.room === r.id);
+        const count = members.length;
+        const isFull = count >= r.max;
+        const isMale = r.block === 'Nam';
+
+        return `
+          <div class="bg-white rounded-2xl p-3.5 border ${isMale ? 'border-blue-100' : 'border-pink-100'} shadow-sm hover:shadow transition flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-xl ${isMale ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'} flex items-center justify-center font-bold text-xs">
+                    ${r.code}
+                  </span>
+                  <div>
+                    <h3 class="font-bold text-slate-800 text-xs">${r.name}</h3>
+                    <span class="text-[10px] text-slate-500">Tầng ${r.floor} • Khu ${r.block}</span>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isFull ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">
+                  ${count}/${r.max} em
+                </span>
+              </div>
+
+              <!-- Thanh tỷ lệ giường -->
+              <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-3">
+                <div class="${isMale ? 'bg-blue-500' : 'bg-pink-500'} h-full rounded-full" style="width: ${(count / r.max) * 100}%"></div>
+              </div>
+
+              <!-- Danh sách học sinh trong phòng -->
+              <div class="mt-2.5 space-y-1">
+                ${members.slice(0, 4).map(s => `
+                  <div class="flex items-center justify-between text-[11px] py-0.5 border-b border-slate-50">
+                    <span class="font-medium text-slate-700 truncate max-w-[120px]">${s.name}</span>
+                    <span class="font-bold text-blue-600 font-mono text-[10px]">${s.className}</span>
+                  </div>
+                `).join('')}
+                ${count > 4 ? `<p class="text-[10px] text-slate-400 text-center italic">+${count - 4} học sinh khác...</p>` : ''}
+                ${count === 0 ? `<p class="text-[10px] text-slate-400 text-center py-2 italic">Phòng còn trống</p>` : ''}
+              </div>
+            </div>
+
+            <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between gap-1">
+              <button onclick="openRoomAttendanceModal('${r.id}')" class="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-[10px] font-bold transition flex items-center gap-1">
+                <i class="fa-solid fa-clipboard-check"></i> Điểm danh
+              </button>
+              <button onclick="openRoomDetailModal('${r.id}')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-semibold transition">
+                Xem DS phòng
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openRoomDetailModal(roomId) {
+      const room = DORM_ROOMS.find(r => r.id === roomId);
+      if (!room) return;
+
+      document.getElementById('room-detail-title').innerHTML = `
+        <i class="fa-solid fa-door-open text-purple-600"></i>
+        <span>${room.name} - Tầng ${room.floor} (Khu ${room.block})</span>
+      `;
+
+      const members = state.students.filter(s => s.room === roomId);
+      document.getElementById('room-detail-subtitle').textContent = `Đang lưu trú: ${members.length} / ${room.max} học sinh`;
+
+      const tbody = document.getElementById('room-members-tbody');
+      if (members.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400 italic">Phòng này hiện chưa xếp học sinh</td></tr>`;
+      } else {
+        tbody.innerHTML = members.map((s, idx) => `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="py-2 px-3 text-center text-slate-400 font-mono font-bold">${idx + 1}</td>
+            <td class="py-2 px-3 text-center font-bold text-blue-700 font-mono">${s.className}</td>
+            <td class="py-2 px-4 font-bold text-slate-900">${s.name}</td>
+            <td class="py-2 px-3 text-center font-mono">${formatDate(s.dob)}</td>
+            <td class="py-2 px-2 text-center">${s.gender}</td>
+            <td class="py-2 px-3 text-center">${s.ethnic}</td>
+            <td class="py-2 px-3 text-center bg-blue-50/50">
+              <button onclick="closeRoomDetailModal(); openEditStudentModal('${s.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-bold shadow-xs">
+                Sửa HS
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      document.getElementById('room-detail-modal').classList.remove('hidden');
+      document.getElementById('room-detail-modal').classList.add('flex');
+    }
+
+    function closeRoomDetailModal() {
+      document.getElementById('room-detail-modal').classList.add('hidden');
+      document.getElementById('room-detail-modal').classList.remove('flex');
+    }
+
+    /* =========================================================
+       TAB 5: 15 LỚP & GIÁO VIÊN CHỦ NHIỆM
+       ========================================================= */
+    function renderClassesList() {
+      const grid = document.getElementById('classes-grid');
+      const classes = Object.keys(TEACHERS_MAP);
+
+      grid.innerHTML = classes.map(cls => {
+        const info = TEACHERS_MAP[cls];
+        const count = state.students.filter(s => s.className === cls).length;
+
+        return `
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm hover:shadow transition flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-black text-sm">
+                  ${cls}
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold font-mono">
+                  ${count} học sinh
+                </span>
+              </div>
+              <div class="mt-3">
+                <span class="text-[11px] text-slate-500 block leading-tight">Giáo viên chủ nhiệm:</span>
+                <span class="font-bold text-slate-900 text-sm">${info.teacher}</span>
+              </div>
+            </div>
+            <div class="mt-4 pt-2.5 border-t border-slate-100 flex items-center justify-end">
+              <button onclick="viewClassDetail('${cls}')" class="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition">
+                Xem DS Lớp &rarr;
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function viewClassDetail(className) {
+      const container = document.getElementById('class-detail-container');
+      container.classList.remove('hidden');
+
+      const info = TEACHERS_MAP[className];
+      const students = state.students.filter(s => s.className === className);
+
+      container.innerHTML = `
+        <div class="p-4 rounded-2xl bg-blue-50/50 border border-blue-200">
+          <div class="flex items-center justify-between pb-3 border-b border-blue-200">
+            <div>
+              <h3 class="text-sm font-bold text-blue-950 flex items-center gap-2">
+                <span>DANH SÁCH CHI TIẾT HỌC SINH LỚP ${className}</span>
+                <span class="px-2 py-0.5 rounded-full bg-blue-600 text-white font-mono text-xs">${students.length} em</span>
+              </h3>
+              <p class="text-xs text-blue-800 mt-0.5">GVCN: <strong>${info?.teacher || ''}</strong></p>
+            </div>
+            <button onclick="document.getElementById('class-detail-container').classList.add('hidden')" class="px-3 py-1 bg-white border border-blue-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">
+              Đóng lại
+            </button>
+          </div>
+
+          <div class="overflow-x-auto mt-3 rounded-xl border border-blue-200 bg-white">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-blue-100/60 font-bold text-slate-800 uppercase">
+                <tr>
+                  <th class="py-2.5 px-3 text-center w-12 text-rose-600">STT</th>
+                  <th class="py-2.5 px-3 text-center text-blue-700">Lớp</th>
+                  <th class="py-2.5 px-4 font-bold text-slate-900">Họ và Tên</th>
+                  <th class="py-2.5 px-3 text-center">Ngày sinh</th>
+                  <th class="py-2.5 px-2 text-center">Giới tính</th>
+                  <th class="py-2.5 px-3 text-center">Dân tộc</th>
+                  <th class="py-2.5 px-3 text-center font-bold text-purple-700">Phòng KTX</th>
+                  <th class="py-2.5 px-3 text-center w-24 bg-blue-50 text-blue-900">Sửa HS</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                ${students.map((s, idx) => {
+                  const rObj = DORM_ROOMS.find(r => r.id === s.room);
+                  const rCode = rObj ? rObj.code : s.room;
+                  return `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                      <td class="py-2 px-3 text-center text-slate-400 font-mono font-bold">${idx + 1}</td>
+                      <td class="py-2 px-3 text-center font-bold text-blue-700">${s.className}</td>
+                      <td class="py-2 px-4 font-bold text-slate-900">${s.name}</td>
+                      <td class="py-2 px-3 text-center font-mono">${formatDate(s.dob)}</td>
+                      <td class="py-2 px-2 text-center">${s.gender}</td>
+                      <td class="py-2 px-3 text-center">${s.ethnic}</td>
+                      <td class="py-2 px-3 text-center font-mono font-bold text-purple-700">${rCode}</td>
+                      <td class="py-2 px-3 text-center bg-blue-50/50">
+                        <button onclick="openEditStudentModal('${s.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-bold shadow-xs">
+                          Sửa HS
+                        </button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    /* =========================================================
+       TAB 6: DANH SÁCH HỌC SINH TOÀN TRƯỜNG
+       ========================================================= */
+    function renderStudentsTable() {
+      // Cập nhật các chỉ số thống kê toàn trường: Tổng số, Nam, Nữ
+      const totalCount = state.students.length;
+      const maleCount = state.students.filter(s => s.gender === 'Nam').length;
+      const femaleCount = state.students.filter(s => s.gender === 'Nữ').length;
+
+      const elTotal = document.getElementById('stat-total-students');
+      const elMale = document.getElementById('stat-male-students');
+      const elFemale = document.getElementById('stat-female-students');
+      const elMalePct = document.getElementById('stat-male-pct');
+      const elFemalePct = document.getElementById('stat-female-pct');
+
+      if (elTotal) elTotal.textContent = totalCount;
+      if (elMale) elMale.textContent = maleCount;
+      if (elFemale) elFemale.textContent = femaleCount;
+      if (elMalePct) elMalePct.textContent = totalCount > 0 ? `${((maleCount / totalCount) * 100).toFixed(1)}%` : '0%';
+      if (elFemalePct) elFemalePct.textContent = totalCount > 0 ? `${((femaleCount / totalCount) * 100).toFixed(1)}%` : '0%';
+
+      const tbody = document.getElementById('students-table-body');
+      const searchVal = document.getElementById('student-search-input')?.value?.toLowerCase().trim() || '';
+      const classFilter = document.getElementById('student-class-filter')?.value || 'ALL';
+
+      const filtered = state.students.filter(s => {
+        const matchesName = s.name.toLowerCase().includes(searchVal);
+        const matchesClass = classFilter === 'ALL' || s.className === classFilter;
+        return matchesName && matchesClass;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 italic">Không tìm thấy học sinh nào phù hợp</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((s, idx) => {
+        const rObj = DORM_ROOMS.find(r => r.id === s.room);
+        const rCode = rObj ? rObj.name : s.room;
+
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="py-2.5 px-3 text-center text-slate-400 font-mono font-bold">${idx + 1}</td>
+            <td class="py-2.5 px-3 text-center font-bold text-blue-700">${s.className}</td>
+            <td class="py-2.5 px-4 font-bold text-slate-900">${s.name}</td>
+            <td class="py-2.5 px-3 text-center font-mono">${formatDate(s.dob)}</td>
+            <td class="py-2.5 px-2 text-center">${s.gender}</td>
+            <td class="py-2.5 px-3 text-center">${s.ethnic}</td>
+            <td class="py-2.5 px-3 text-center font-bold text-purple-700 font-mono">${rCode}</td>
+            <td class="py-2.5 px-3 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.status === 'Đang ở KTX' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                ${s.status}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-center bg-blue-50/50">
+              <button onclick="openEditStudentModal('${s.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-bold shadow-xs">
+                Sửa HS
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* =========================================================
+       TAB 7: THỰC ĐƠN & ẢNH BỮA ĂN
+       ========================================================= */
+    function renderMenuTab() {
+      const dateInput = document.getElementById('menu-date-input');
+      if (!dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+      }
+      const curDate = dateInput.value;
+      const data = state.menuData[curDate] || {};
+
+      document.getElementById('menu-desc-b').value = data.descB || '';
+      document.getElementById('menu-desc-l').value = data.descL || '';
+      document.getElementById('menu-desc-d').value = data.descD || '';
+
+      if (data.imgB) document.getElementById('img-menu-b').src = data.imgB;
+      if (data.imgL) document.getElementById('img-menu-l').src = data.imgL;
+      if (data.imgD) document.getElementById('img-menu-d').src = data.imgD;
+    }
+
+    function saveMenuDescription(mealKey, textVal) {
+      const curDate = document.getElementById('menu-date-input').value;
+      if (!state.menuData[curDate]) state.menuData[curDate] = {};
+      state.menuData[curDate][`desc${mealKey.toUpperCase()}`] = textVal;
+      saveAllToStorage();
+    }
+
+    function handleMenuImageUpload(event, mealKey) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64 = e.target.result;
+        const curDate = document.getElementById('menu-date-input').value;
+        if (!state.menuData[curDate]) state.menuData[curDate] = {};
+        state.menuData[curDate][`img${mealKey.toUpperCase()}`] = base64;
+        saveAllToStorage();
+        document.getElementById(`img-menu-${mealKey}`).src = base64;
+        showToast("Đã tải ảnh bữa ăn lên thành công!");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /* =========================================================
+       TAB 8: SỔ NỀ NẾP & KỶ LUẬT
+       ========================================================= */
+    function renderDisciplineTable() {
+      const tbody = document.getElementById('discipline-table-body');
+      if (!tbody) return;
+
+      if (!state.disciplines || state.disciplines.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 italic">Chưa có ghi chép nề nếp nào</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = state.disciplines.map((d, idx) => {
+        const s = state.students.find(x => x.id === d.studentId);
+        const rObj = DORM_ROOMS.find(r => r.id === s?.room);
+        const rCode = rObj ? rObj.name : s?.room || '';
+
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="py-2.5 px-3 text-center text-slate-400 font-mono font-bold">${idx + 1}</td>
+            <td class="py-2.5 px-3 text-center font-mono">${formatDate(d.date)}</td>
+            <td class="py-2.5 px-4 font-bold text-slate-900">${s?.name || 'Học sinh'}</td>
+            <td class="py-2.5 px-3 text-center font-bold text-blue-700">${s?.className || ''}</td>
+            <td class="py-2.5 px-3 text-center font-bold text-purple-700 font-mono">${rCode}</td>
+            <td class="py-2.5 px-3 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${d.type === 'Khen thưởng' ? 'bg-emerald-100 text-emerald-800' : (d.type === 'Vi phạm' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')}">
+                ${d.type}
+              </span>
+            </td>
+            <td class="py-2.5 px-4 text-slate-700">${d.content}</td>
+            <td class="py-2.5 px-3 text-center font-mono font-bold ${d.points > 0 ? 'text-emerald-600' : 'text-rose-600'}">
+              ${d.points > 0 ? '+' : ''}${d.points}
+            </td>
+            <td class="py-2.5 px-3 text-center bg-blue-50/50">
+              <button onclick="openEditStudentModal('${s?.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[11px] font-bold shadow-xs">
+                Sửa HS
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openAddDisciplineModal() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('dis-date').value = today;
+
+      const sel = document.getElementById('dis-student');
+      sel.innerHTML = state.students.map(s => `
+        <option value="${s.id}">${s.name} - Lớp ${s.className}</option>
+      `).join('');
+
+      document.getElementById('dis-type').value = 'Vi phạm';
+      document.getElementById('dis-points').value = '-2';
+      document.getElementById('dis-content').value = '';
+
+      document.getElementById('discipline-modal').classList.remove('hidden');
+      document.getElementById('discipline-modal').classList.add('flex');
+    }
+
+    function closeDisciplineModal() {
+      document.getElementById('discipline-modal').classList.add('hidden');
+      document.getElementById('discipline-modal').classList.remove('flex');
+    }
+
+    function handleSaveDiscipline(e) {
+      e.preventDefault();
+      const date = document.getElementById('dis-date').value;
+      const studentId = document.getElementById('dis-student').value;
+      const type = document.getElementById('dis-type').value;
+      const points = parseInt(document.getElementById('dis-points').value, 10) || 0;
+      const content = document.getElementById('dis-content').value.trim();
+
+      state.disciplines.unshift({
+        id: `DIS-${Date.now()}`,
+        date,
+        studentId,
+        type,
+        points,
+        content
+      });
+
+      saveAllToStorage();
+      closeDisciplineModal();
+      renderDisciplineTable();
+      showToast("Đã lưu ghi chép nề nếp thành công!");
+    }
+
+    /* =========================================================
+       QUẢN LÝ HỌC SINH (THÊM / SỬA / XÓA)
+       ========================================================= */
+    function populateDormRoomSelect(selectedRoomId) {
+      const roomSelect = document.getElementById('modal-student-room');
+      if (!roomSelect) return;
+      roomSelect.innerHTML = DORM_ROOMS.map(r => 
+        `<option value="${r.id}" ${r.id === selectedRoomId ? 'selected' : ''}>${r.name} - Tầng ${r.floor} (Khu ${r.block})</option>`
+      ).join('');
+    }
+
+    function openEditStudentModal(studentId) {
+      const student = state.students.find(s => s.id === studentId);
+      if (!student) {
+        showToast("Không tìm thấy thông tin học sinh!", "error");
+        return;
+      }
+
+      document.getElementById('modal-student-title').innerHTML = `
+        <i class="fa-solid fa-user-pen text-blue-600"></i>
+        <span>Chỉnh Sửa Thông Tin: ${student.name}</span>
+      `;
+
+      document.getElementById('modal-student-id').value = student.id;
+      document.getElementById('modal-student-name').value = student.name || '';
+      document.getElementById('modal-student-class').value = student.className || '6A';
+      populateDormRoomSelect(student.room);
+      document.getElementById('modal-student-dob').value = student.dob || '';
+      document.getElementById('modal-student-gender').value = student.gender || 'Nam';
+      document.getElementById('modal-student-ethnic').value = student.ethnic || 'Mông';
+      document.getElementById('modal-student-status').value = student.status || 'Đang ở KTX';
+      document.getElementById('modal-student-phone').value = student.phone || '';
+
+      const btnDelete = document.getElementById('btn-delete-student');
+      if (btnDelete) btnDelete.classList.remove('hidden');
+
+      const modal = document.getElementById('student-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function openAddStudentModal() {
+      document.getElementById('modal-student-title').innerHTML = `
+        <i class="fa-solid fa-user-plus text-emerald-600"></i>
+        <span>Thêm Học Sinh Nội Trú Mới</span>
+      `;
+
+      document.getElementById('modal-student-id').value = '';
+      document.getElementById('modal-student-name').value = '';
+      document.getElementById('modal-student-class').value = '6A';
+      populateDormRoomSelect(DORM_ROOMS[0]?.id || 'P.1.2-Nam');
+      document.getElementById('modal-student-dob').value = '';
+      document.getElementById('modal-student-gender').value = 'Nam';
+      document.getElementById('modal-student-ethnic').value = 'Mông';
+      document.getElementById('modal-student-status').value = 'Đang ở KTX';
+      document.getElementById('modal-student-phone').value = '';
+
+      const btnDelete = document.getElementById('btn-delete-student');
+      if (btnDelete) btnDelete.classList.add('hidden');
+
+      const modal = document.getElementById('student-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeStudentModal() {
+      const modal = document.getElementById('student-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function handleSaveStudent(event) {
+      event.preventDefault();
+      const studentId = document.getElementById('modal-student-id').value;
+      const name = document.getElementById('modal-student-name').value.trim();
+      const className = document.getElementById('modal-student-class').value;
+      const room = document.getElementById('modal-student-room').value;
+      const dob = document.getElementById('modal-student-dob').value;
+      const gender = document.getElementById('modal-student-gender').value;
+      const ethnic = document.getElementById('modal-student-ethnic').value.trim() || 'Mông';
+      const status = document.getElementById('modal-student-status').value;
+      const phone = document.getElementById('modal-student-phone').value.trim();
+
+      if (!name) {
+        showToast("Vui lòng nhập họ và tên học sinh!", "error");
+        return;
+      }
+
+      if (studentId) {
+        // Cập nhật học sinh hiện có
+        const idx = state.students.findIndex(s => s.id === studentId);
+        if (idx !== -1) {
+          state.students[idx] = {
+            ...state.students[idx],
+            name,
+            className,
+            room,
+            dob,
+            gender,
+            ethnic,
+            status,
+            phone
+          };
+          showToast(`Đã cập nhật thông tin em ${name}!`);
+        }
+      } else {
+        // Thêm học sinh mới
+        const newId = `SMC-${className}-${Date.now().toString().slice(-4)}`;
+        state.students.push({
+          id: newId,
+          name,
+          className,
+          room,
+          dob,
+          gender,
+          ethnic,
+          status,
+          phone
+        });
+        showToast(`Đã thêm học sinh ${name} vào lớp ${className}!`);
+      }
+
+      saveAllToStorage();
+      closeStudentModal();
+
+      // Cập nhật lại giao diện hiển thị tức thì
+      refreshCurrentActiveTab();
+    }
+
+    function deleteCurrentStudent() {
+      const studentId = document.getElementById('modal-student-id').value;
+      if (!studentId) return;
+
+      const student = state.students.find(s => s.id === studentId);
+      const studentName = student ? student.name : 'học sinh';
+
+      state.students = state.students.filter(s => s.id !== studentId);
+
+      // Xóa bản ghi điểm danh liên quan
+      Object.keys(state.dailyMeals).forEach(dateKey => {
+        if (state.dailyMeals[dateKey] && state.dailyMeals[dateKey][studentId]) {
+          delete state.dailyMeals[dateKey][studentId];
+        }
+      });
+
+      saveAllToStorage();
+      closeStudentModal();
+      refreshCurrentActiveTab();
+      showToast(`Đã xóa em ${studentName} khỏi danh sách!`);
+    }
+
+    /* =========================================================
+       KHỞI CHẠY HỆ THỐNG
+       ========================================================= */
+    window.onload = function() {
+      loadState();
+
+      // Đặt ngày hôm nay làm mặc định cho các ô chọn ngày
+      const today = new Date().toISOString().split('T')[0];
+      const attDateInput = document.getElementById('attendance-date');
+      const sumDateInput = document.getElementById('daily-summary-date');
+      const menuDateInput = document.getElementById('menu-date-input');
+
+      if (attDateInput) attDateInput.value = today;
+      if (sumDateInput) sumDateInput.value = today;
+      if (menuDateInput) menuDateInput.value = today;
+
+      // Hiển thị tab mặc định Điểm Danh Bữa Ăn
+      switchTab('tab-attendance');
+    };
+  </script>
+</body>
+</html>
